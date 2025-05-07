@@ -1,0 +1,318 @@
+/* Variables globales */
+:root {
+    --primary-color: #3498db;
+    --secondary-color: #2c3e50;
+    --accent-color: #e74c3c;
+    --light-color: #ecf0f1;
+    --dark-color: #34495e;
+    --success-color: #2ecc71;
+    --border-radius: 6px;
+    --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    --transition: all 0.3s ease;
+}
+
+/* Estilos globales */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f5f7fa;
+    color: #333;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Header */
+header {
+    background-color: var(--secondary-color);
+    color: white;
+    padding: 20px;
+    border-radius: var(--border-radius);
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+header h1 {
+    margin-bottom: 10px;
+}
+
+header p {
+    opacity: 0.8;
+}
+
+/* Navegación */
+nav {
+    background-color: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    margin-bottom: 20px;
+}
+
+nav ul {
+    display: flex;
+    list-style: none;
+    overflow-x: auto;
+}
+
+nav a {
+    display: block;
+    padding: 15px 20px;
+    color: var(--dark-color);
+    text-decoration: none;
+    transition: var(--transition);
+    white-space: nowrap;
+}
+
+nav a:hover {
+    background-color: var(--light-color);
+}
+
+nav a.active {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+/* Sección de filtros */
+.filters {
+    background-color: white;
+    border-radius: var(--border-radius);
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: var(--box-shadow);
+}
+
+.filters h2 {
+    margin-bottom: 15px;
+    color: var(--secondary-color);
+    font-size: 1.4rem;
+}
+
+#filterForm {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 15px;
+}
+
+.filter-group {
+    margin-bottom: 10px;
+}
+
+.filter-group:last-child {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+input, select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+}
+
+input:focus, select:focus {
+    border-color: var(--primary-color);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+button {
+    padding: 10px 15px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+button:hover {
+    background-color: #2980b9;
+}
+
+#btnLimpiar {
+    background-color: #95a5a6;
+}
+
+#btnLimpiar:hover {
+    background-color: #7f8c8d;
+}
+
+/* Sección de resultados */
+.results {
+    background-color: white;
+    border-radius: var(--border-radius);
+    padding: 20px;
+    box-shadow: var(--box-shadow);
+}
+
+.results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.results-header h2 {
+    color: var(--secondary-color);
+    font-size: 1.4rem;
+}
+
+.export-options {
+    display: flex;
+    gap: 10px;
+}
+
+#btnExportPDF {
+    background-color: var(--accent-color);
+}
+
+#btnExportPDF:hover {
+    background-color: #c0392b;
+}
+
+#btnExportExcel {
+    background-color: var(--success-color);
+}
+
+#btnExportExcel:hover {
+    background-color: #27ae60;
+}
+
+/* Visualización alternativa (tabla/gráfica) */
+.visualization-toggle {
+    display: flex;
+    margin-bottom: 20px;
+    gap: 10px;
+}
+
+.toggle-btn {
+    background-color: #f1f2f6;
+    color: var(--dark-color);
+}
+
+.toggle-btn.active {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+/* Vistas de tabla y gráfico */
+.view {
+    display: none;
+}
+
+.view.active {
+    display: block;
+}
+
+/* Tabla de resultados */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+th, td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+th {
+    background-color: #f5f7fa;
+    font-weight: 600;
+    color: var(--secondary-color);
+}
+
+tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.no-data {
+    text-align: center;
+    padding: 30px;
+    color: #7f8c8d;
+    font-style: italic;
+}
+
+/* Paginación */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.pagination button {
+    background-color: #f1f2f6;
+    color: var(--dark-color);
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    justify-content: center;
+}
+
+.pagination button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Contenedor de gráficas */
+.chart-container {
+    height: 400px;
+    width: 100%;
+    position: relative;
+}
+
+/* Footer */
+footer {
+    margin-top: 30px;
+    text-align: center;
+    color: #7f8c8d;
+    font-size: 0.9em;
+    padding: 20px;
+}
+
+@media (max-width: 768px) {
+    .results-header {
+        flex-direction: column;
+        gap: 15px;
+        align-items: flex-start;
+    }
+    
+    .export-options {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    nav ul {
+        flex-wrap: nowrap;
+    }
+    
+    #filterForm {
+        grid-template-columns: 1fr;
+    }
+}
