@@ -41,3 +41,19 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER tr_verificar_capacidad
 BEFORE INSERT ON socios_clases
 FOR EACH ROW EXECUTE FUNCTION verificar_capacidad_clase();
+
+create or replace function validar_fechas_entrenamiento()
+returns trigger as $$
+begin
+    if NEW.fecha_hora_fin <= NEW.fecha_hora_inicio then
+        raise exception 'La fecha y hora de fin debe ser posterior a la de inicio.';
+    end if;
+    return NEW;
+end;
+$$ language plpgsql;
+
+create trigger trg_validar_fechas_entrenamiento
+before insert or update on registros_entrenamiento
+for each row
+when (NEW.fecha_hora_fin is not null)
+execute function validar_fechas_entrenamiento();
