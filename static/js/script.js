@@ -36,7 +36,7 @@ function initApp() {
                         <div class="filter-group">
                             <label for="filtro3">Categoría:</label>
                             <select id="filtro3" name="filtro3">
-                                <option value="">Seleccionar...</option>
+                                <option value="">Seleccionar</option>
                                 <option value="opcion1">Opción 1</option>
                                 <option value="opcion2">Opción 2</option>
                                 <option value="opcion3">Opción 3</option>
@@ -76,23 +76,21 @@ function initApp() {
                             <table id="resultsTable">
                                 <thead>
                                     <tr>
-                                        <th>ID</th>
-                                        <th>Fecha</th>
-                                        <th>Categoría</th>
-                                        <th>Descripción</th>
-                                        <th>Monto</th>
+                                        <th>Rosales</th>
+                                        <th>Come</th>
+                                        <th>Mucho</th>
+                                        <th>Pene</th>
+                                        <th>aaa</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    <tr>
-                                        <td colspan="5" class="no-data">Aplique filtros para generar el reporte</td>
-                                    </tr>
+                                <tbody id="tableBody">
+                                    <!-- Aquí insertaremos datos -->
                                 </tbody>
                             </table>
                             <div class="pagination">
-                                <button id="prevPage" disabled><i class="fas fa-chevron-left"></i></button>
-                                <span id="pageInfo">Página 1 de 1</span>
-                                <button id="nextPage" disabled><i class="fas fa-chevron-right"></i></button>
+                                <button id="prevPage"><i class="fas fa-chevron-left"></i></button>
+                                <span id="pageInfo">Página 1</span>
+                                <button id="nextPage"><i class="fas fa-chevron-right"></i></button>
                             </div>
                         </div>
                         <div id="chartView" class="view">
@@ -111,6 +109,78 @@ function initApp() {
     `;
 
     setupEventListeners();
+    loadTableData();
+}
+
+let currentPage = 1;
+const rowsPerPage = 10;
+const allData = [
+    ["001", "2025-05-07", "Categoría A", "Descripción 1", "$100.00"],
+    ["002", "2025-05-06", "Categoría B", "Descripción 2", "$200.00"],
+    ["003", "2025-05-05", "Categoría C", "Descripción 3", "$300.00"],
+    ["004", "2025-05-04", "Categoría D", "Descripción 4", "$400.00"],
+    ["pene", "2025-05-03", "Categoría E", "Descripción 5", "$500.00"],
+    ["006", "2025-05-02", "Categoría F", "Descripción 6", "$600.00"],
+    ["007", "2025-05-01", "Categoría G", "Descripción 7", "$700.00"],
+    ["008", "2025-04-30", "Categoría H", "Descripción 8", "$800.00"],
+    ["009", "2025-04-29", "Categoría I", "Descripción 9", "$900.00"],
+    ["010", "2025-04-28", "Categoría J", "Descripción 10", "$1000.00"],
+    ["011", "2025-04-27", "Categoría K", "Descripción 11", "$1100.00"],
+    ["012", "2025-04-26", "Categoría L", "Descripción 12", "$1200.00"],
+    ["001", "2025-05-07", "Categoría A", "Descripción 1", "$100.00"],
+    ["002", "2025-05-06", "Categoría B", "Descripción 2", "$200.00"],
+    ["003", "2025-05-05", "Categoría C", "Descripción 3", "$300.00"],
+    ["004", "2025-05-04", "Categoría D", "Descripción 4", "$400.00"],
+    ["pene", "2025-05-03", "Categoría E", "Descripción 5", "$500.00"],
+    ["006", "2025-05-02", "Categoría F", "Descripción 6", "$600.00"],
+    ["007", "2025-05-01", "Categoría G", "Descripción 7", "$700.00"],
+    ["008", "2025-04-30", "Categoría H", "Descripción 8", "$800.00"],
+    ["009", "2025-04-29", "Categoría I", "Descripción 9", "$900.00"],
+    ["010", "2025-04-28", "Categoría J", "Descripción 10", "$1000.00"],
+    ["011", "2025-04-27", "Categoría K", "Descripción 11", "$1100.00"],
+    ["012", "2025-04-26", "Categoría L", "Descripción 12", "$1200.00"]
+];
+let totalPages = Math.ceil(allData.length / rowsPerPage);
+
+function loadTableData() {
+    const tableBody = document.getElementById('tableBody');
+    tableBody.innerHTML = '';
+
+    const start = (currentPage - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
+    const pageData = allData.slice(start, end);
+
+    pageData.forEach(row => {
+        const tr = document.createElement('tr');
+        row.forEach(cell => {
+            const td = document.createElement('td');
+            td.textContent = cell;
+            tr.appendChild(td);
+        });
+        tableBody.appendChild(tr);
+    });
+
+    renderPagination();
+}
+
+function renderPagination() {
+    const paginationContainer = document.querySelector('.pagination');
+    paginationContainer.innerHTML = '';
+
+    totalPages = Math.ceil(allData.length / rowsPerPage);
+
+    for (let i = 1; i <= totalPages; i++) {
+        const pageButton = document.createElement('button');
+        pageButton.textContent = i;
+        if (i === currentPage) {
+            pageButton.classList.add('active');
+        }
+        pageButton.addEventListener('click', () => {
+            currentPage = i;
+            loadTableData();
+        });
+        paginationContainer.appendChild(pageButton);
+    }
 }
 
 function setupEventListeners() {
@@ -119,7 +189,6 @@ function setupEventListeners() {
             e.preventDefault();
             document.querySelectorAll('nav a').forEach(l => l.classList.remove('active'));
             this.classList.add('active');
-            const reportType = this.getAttribute('data-report');
             document.getElementById('reportTitle').textContent = this.textContent;
         });
     });
@@ -132,10 +201,15 @@ function setupEventListeners() {
             const viewType = this.getAttribute('data-view');
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.getElementById(viewType + 'View').classList.add('active');
+
+            if (viewType === 'chart') {
+                renderChart();
+            }
         });
     });
 
     document.getElementById('btnFiltrar').addEventListener('click', function() {
+        alert('Filtrar aplicado (simulado)');
     });
 
     document.getElementById('btnLimpiar').addEventListener('click', function() {
@@ -148,5 +222,68 @@ function setupEventListeners() {
 
     document.getElementById('btnExportExcel').addEventListener('click', function() {
         alert('Exportar a Excel conectado');
+    });
+
+    document.getElementById('prevPage').addEventListener('click', function() {
+        if (currentPage > 1) {
+            currentPage--;
+            loadTableData();
+        }
+    });
+
+    document.getElementById('nextPage').addEventListener('click', function() {
+        if (currentPage < totalPages) {
+            currentPage++;
+            loadTableData();
+        }
+    });
+}
+
+function renderChart() {
+    const ctx = document.getElementById('reportChart').getContext('2d');
+
+    if (window.reportChart && typeof window.reportChart.destroy === 'function') {
+        window.reportChart.destroy();
+    }
+
+    const start = (currentPage - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
+    const pageData = allData.slice(start, end);
+
+    const categoryTotals = {};
+    pageData.forEach(row => {
+        const category = row[2];
+        const amount = parseFloat(row[4].replace('$', ''));
+        if (categoryTotals[category]) {
+            categoryTotals[category] += amount;
+        } else {
+            categoryTotals[category] = amount;
+        }
+    });
+
+    const labels = Object.keys(categoryTotals);
+    const values = Object.values(categoryTotals);
+
+    window.reportChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Monto total por categoría (página actual)',
+                data: values,
+                backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
     });
 }
