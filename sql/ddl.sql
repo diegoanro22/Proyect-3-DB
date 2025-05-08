@@ -31,7 +31,7 @@ create table entrenadores (
     id_entrenador serial primary key,
     nombre varchar(100) not null,
     apellido varchar(100) not null,
-    especialidad varchar(100) check (especialidad in ('Cardio', 'Fuerza', 'Flexibilidad', 'Crossfit', 'Pilates', 'Yoga')),
+    especialidad varchar(100) check (especialidad in ('Cardio', 'Fuerza', 'Rehabilitación', 'Crossfit', 'Pilates', 'Yoga')),
     fecha_contratacion date default current_date check (fecha_contratacion <= current_date),
     constraint uk_entrenador unique (nombre, apellido)
 );
@@ -74,8 +74,8 @@ create table ejercicios (
     id_ejercicio serial primary key,
     nombre_ejercicio varchar(100) not null unique,
     descripcion text not null,
-    grupo_muscular varchar(50) not null check (grupo_muscular in ('Piernas', 'Brazos', 'Pecho', 'Espalda', 'Abdomen', 'Cardio')),
-    tipo_ejercicio varchar(50) not null check (tipo_ejercicio in ('Aeróbico', 'Anaeróbico', 'Flexibilidad', 'Equilibrio')),
+    grupo_muscular varchar(50) not null check (grupo_muscular in ('Piernas', 'Brazos', 'Pecho', 'Espalda', 'Abdomen', 'Cardio', 'Hombros', 'Cuerpo completo', 'Glúteos', 'Core')),
+    tipo_ejercicio varchar(50) not null check (tipo_ejercicio in ('Fuerza', 'Resistencia', 'Potencia', 'Movilidad')),
     id_equipo integer references equipos(id_equipo)
 );
 
