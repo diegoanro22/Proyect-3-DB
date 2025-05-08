@@ -19,6 +19,8 @@ services:
       - ./sql/ddl.sql:/docker-entrypoint-initdb.d/ddl.sql
       - ./sql/dml.sql:/docker-entrypoint-initdb.d/dml.sql
       - ./sql/tri.sql:/docker-entrypoint-initdb.d/tri.sql
+    ports:
+      - "5432:5432"
 
 volumes:
   postgres_data:
