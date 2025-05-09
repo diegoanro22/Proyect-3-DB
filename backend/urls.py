@@ -17,8 +17,15 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from django.views.generic import TemplateView 
+from GymReports import views as reportes_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', TemplateView.as_view(template_name='index.html'), name='home'),
+    
+    # APIs para datos de reportes
+    path('api/salas/', reportes_views.get_salas, name='api_salas'),
+    path('api/equipos/', reportes_views.get_equipos_data, name='api_equipos'),
+    path('api/estados-equipos/', reportes_views.get_resumen_estados_equipos, name='api_estados_equipos'),
+    path('api/equipos-por-sala/', reportes_views.get_equipos_por_sala, name='api_equipos_por_sala'),
 ]
