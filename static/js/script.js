@@ -1,4 +1,12 @@
+// Modificación del script.js para conectar correctamente los botones de exportación
+
 document.addEventListener("DOMContentLoaded", function() {
+    // Cargar el script de exportaciones primero
+    const exportScript = document.createElement('script');
+    exportScript.src = 'exportaciones.js'; // Asumiendo que está en la misma carpeta
+    document.head.appendChild(exportScript);
+    
+    // Luego cargar el resto de scripts
     loadScripts().then(() => {
         initApp();
     });
@@ -63,6 +71,18 @@ function initApp() {
                     <h2>Filtros</h2>
                     <div id="filterForm">
                         <!-- Los filtros se cargarán dinámicamente según el reporte -->
+                        <div class="form-group">
+                            <label for="fechaInicio">Fecha Inicio:</label>
+                            <input type="date" id="fechaInicio" name="fechaInicio">
+                        </div>
+                        <div class="form-group">
+                            <label for="fechaFin">Fecha Fin:</label>
+                            <input type="date" id="fechaFin" name="fechaFin">
+                        </div>
+                        <div class="form-buttons">
+                            <button type="button" id="btnFiltrar">Filtrar</button>
+                            <button type="button" id="btnLimpiar">Limpiar</button>
+                        </div>
                     </div>
                 </section>
 
@@ -228,13 +248,24 @@ function setupEventListeners() {
         }
     });
 
-    // Botones de exportación
+    // Conectar los botones de exportación a las funciones en exportaciones.js
+    // Ya no usamos alerts, sino las funciones reales de exportación
     document.getElementById('btnExportPDF').addEventListener('click', function() {
-        alert('Exportar a PDF conectado');
+        // Llamar a la función exportarAPDF de exportaciones.js
+        if (typeof window.exportarAPDF === 'function') {
+            window.exportarAPDF();
+        } else {
+            console.error('La función exportarAPDF no está disponible');
+        }
     });
 
     document.getElementById('btnExportExcel').addEventListener('click', function() {
-        alert('Exportar a Excel conectado');
+        // Llamar a la función exportarAExcel de exportaciones.js
+        if (typeof window.exportarAExcel === 'function') {
+            window.exportarAExcel();
+        } else {
+            console.error('La función exportarAExcel no está disponible');
+        }
     });
 
     // Paginación
