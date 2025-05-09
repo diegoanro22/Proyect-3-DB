@@ -1,6 +1,20 @@
 document.addEventListener("DOMContentLoaded", function() {
-    initApp();
+    loadScripts().then(() => {
+        initApp();
+    });
 });
+
+// Modificar la función loadScripts en script.js
+function loadScripts() {
+    return new Promise((resolve, reject) => {
+        // Cargar rp4.js desde la carpeta static/js
+        const script = document.createElement('script');
+        script.src = '/static/js/rp4.js';  // Ruta actualizada
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error('Error al cargar rp4.js'));
+        document.head.appendChild(script);
+    });
+}
 
 function initApp() {
     const root = document.getElementById("root");
@@ -16,7 +30,7 @@ function initApp() {
                     <li><a href="#" class="active" data-report="reporte1">Reporte 1</a></li>
                     <li><a href="#" data-report="reporte2">Reporte 2</a></li>
                     <li><a href="#" data-report="reporte3">Reporte 3</a></li>
-                    <li><a href="#" data-report="reporte4">Reporte 4</a></li>
+                    <li><a href="#" data-report="reporte4">Uso y Tiempos de Equipos</a></li>
                     <li><a href="#" data-report="reporte5">Reporte 5</a></li>
                 </ul>
             </nav>
@@ -76,11 +90,11 @@ function initApp() {
                             <table id="resultsTable">
                                 <thead>
                                     <tr>
-                                        <th>Rosales</th>
-                                        <th>Come</th>
-                                        <th>Mucho</th>
-                                        <th>Pene</th>
-                                        <th>aaa</th>
+                                        <th>ID</th>
+                                        <th>Fecha</th>
+                                        <th>Categoría</th>
+                                        <th>Descripción</th>
+                                        <th>Monto</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tableBody">
@@ -119,7 +133,7 @@ const allData = [
     ["002", "2025-05-06", "Categoría B", "Descripción 2", "$200.00"],
     ["003", "2025-05-05", "Categoría C", "Descripción 3", "$300.00"],
     ["004", "2025-05-04", "Categoría D", "Descripción 4", "$400.00"],
-    ["pene", "2025-05-03", "Categoría E", "Descripción 5", "$500.00"],
+    ["005", "2025-05-03", "Categoría E", "Descripción 5", "$500.00"],
     ["006", "2025-05-02", "Categoría F", "Descripción 6", "$600.00"],
     ["007", "2025-05-01", "Categoría G", "Descripción 7", "$700.00"],
     ["008", "2025-04-30", "Categoría H", "Descripción 8", "$800.00"],
@@ -127,18 +141,18 @@ const allData = [
     ["010", "2025-04-28", "Categoría J", "Descripción 10", "$1000.00"],
     ["011", "2025-04-27", "Categoría K", "Descripción 11", "$1100.00"],
     ["012", "2025-04-26", "Categoría L", "Descripción 12", "$1200.00"],
-    ["001", "2025-05-07", "Categoría A", "Descripción 1", "$100.00"],
-    ["002", "2025-05-06", "Categoría B", "Descripción 2", "$200.00"],
-    ["003", "2025-05-05", "Categoría C", "Descripción 3", "$300.00"],
-    ["004", "2025-05-04", "Categoría D", "Descripción 4", "$400.00"],
-    ["pene", "2025-05-03", "Categoría E", "Descripción 5", "$500.00"],
-    ["006", "2025-05-02", "Categoría F", "Descripción 6", "$600.00"],
-    ["007", "2025-05-01", "Categoría G", "Descripción 7", "$700.00"],
-    ["008", "2025-04-30", "Categoría H", "Descripción 8", "$800.00"],
-    ["009", "2025-04-29", "Categoría I", "Descripción 9", "$900.00"],
-    ["010", "2025-04-28", "Categoría J", "Descripción 10", "$1000.00"],
-    ["011", "2025-04-27", "Categoría K", "Descripción 11", "$1100.00"],
-    ["012", "2025-04-26", "Categoría L", "Descripción 12", "$1200.00"]
+    ["013", "2025-05-07", "Categoría A", "Descripción 1", "$100.00"],
+    ["014", "2025-05-06", "Categoría B", "Descripción 2", "$200.00"],
+    ["015", "2025-05-05", "Categoría C", "Descripción 3", "$300.00"],
+    ["016", "2025-05-04", "Categoría D", "Descripción 4", "$400.00"],
+    ["017", "2025-05-03", "Categoría E", "Descripción 5", "$500.00"],
+    ["018", "2025-05-02", "Categoría F", "Descripción 6", "$600.00"],
+    ["019", "2025-05-01", "Categoría G", "Descripción 7", "$700.00"],
+    ["020", "2025-04-30", "Categoría H", "Descripción 8", "$800.00"],
+    ["021", "2025-04-29", "Categoría I", "Descripción 9", "$900.00"],
+    ["022", "2025-04-28", "Categoría J", "Descripción 10", "$1000.00"],
+    ["023", "2025-04-27", "Categoría K", "Descripción 11", "$1100.00"],
+    ["024", "2025-04-26", "Categoría L", "Descripción 12", "$1200.00"]
 ];
 let totalPages = Math.ceil(allData.length / rowsPerPage);
 
@@ -163,33 +177,27 @@ function loadTableData() {
     renderPagination();
 }
 
-function renderPagination() {
-    const paginationContainer = document.querySelector('.pagination');
-    paginationContainer.innerHTML = '';
-
-    totalPages = Math.ceil(allData.length / rowsPerPage);
-
-    for (let i = 1; i <= totalPages; i++) {
-        const pageButton = document.createElement('button');
-        pageButton.textContent = i;
-        if (i === currentPage) {
-            pageButton.classList.add('active');
-        }
-        pageButton.addEventListener('click', () => {
-            currentPage = i;
-            loadTableData();
-        });
-        paginationContainer.appendChild(pageButton);
-    }
-}
-
 function setupEventListeners() {
     document.querySelectorAll('nav a').forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
             document.querySelectorAll('nav a').forEach(l => l.classList.remove('active'));
             this.classList.add('active');
+            
+            const reportType = this.getAttribute('data-report');
             document.getElementById('reportTitle').textContent = this.textContent;
+            
+            // Cargar el reporte específico
+            if (reportType === 'reporte4') {
+                if (typeof window.loadReporte4 === 'function') {
+                    window.loadReporte4();
+                } else {
+                    console.error('La función loadReporte4 no está disponible');
+                }
+            } else {
+                // Cargar el reporte predeterminado para otros tipos
+                loadTableData();
+            }
         });
     });
 
@@ -203,17 +211,33 @@ function setupEventListeners() {
             document.getElementById(viewType + 'View').classList.add('active');
 
             if (viewType === 'chart') {
-                renderChart();
+                const activeReport = document.querySelector('nav a.active').getAttribute('data-report');
+                if (activeReport === 'reporte4' && typeof window.renderChartReporte4 === 'function') {
+                    // Si estamos en el reporte 4, usamos su función específica de gráficos
+                    loadTableDataReporte4();
+                } else {
+                    // Para otros reportes usamos la función genérica
+                    renderChart();
+                }
             }
         });
     });
 
     document.getElementById('btnFiltrar').addEventListener('click', function() {
-        alert('Filtrar aplicado (simulado)');
+        const activeReport = document.querySelector('nav a.active').getAttribute('data-report');
+        if (activeReport === 'reporte4') {
+            loadTableDataReporte4();
+        } else {
+            alert('Filtrar aplicado (simulado)');
+        }
     });
 
     document.getElementById('btnLimpiar').addEventListener('click', function() {
         document.getElementById('filterForm').reset();
+        const activeReport = document.querySelector('nav a.active').getAttribute('data-report');
+        if (activeReport === 'reporte4') {
+            loadTableDataReporte4();
+        }
     });
 
     document.getElementById('btnExportPDF').addEventListener('click', function() {
@@ -227,62 +251,25 @@ function setupEventListeners() {
     document.getElementById('prevPage').addEventListener('click', function() {
         if (currentPage > 1) {
             currentPage--;
-            loadTableData();
+            
+            const activeReport = document.querySelector('nav a.active').getAttribute('data-report');
+            if (activeReport === 'reporte4') {
+                loadTableDataReporte4();
+            } else {
+                loadTableData();
+            }
         }
     });
 
     document.getElementById('nextPage').addEventListener('click', function() {
         if (currentPage < totalPages) {
             currentPage++;
-            loadTableData();
-        }
-    });
-}
-
-function renderChart() {
-    const ctx = document.getElementById('reportChart').getContext('2d');
-
-    if (window.reportChart && typeof window.reportChart.destroy === 'function') {
-        window.reportChart.destroy();
-    }
-
-    const start = (currentPage - 1) * rowsPerPage;
-    const end = start + rowsPerPage;
-    const pageData = allData.slice(start, end);
-
-    const categoryTotals = {};
-    pageData.forEach(row => {
-        const category = row[2];
-        const amount = parseFloat(row[4].replace('$', ''));
-        if (categoryTotals[category]) {
-            categoryTotals[category] += amount;
-        } else {
-            categoryTotals[category] = amount;
-        }
-    });
-
-    const labels = Object.keys(categoryTotals);
-    const values = Object.values(categoryTotals);
-
-    window.reportChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Monto total por categoría (página actual)',
-                data: values,
-                backgroundColor: 'rgba(54, 162, 235, 0.7)',
-                borderColor: 'rgba(54, 162, 235, 1)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
+            
+            const activeReport = document.querySelector('nav a.active').getAttribute('data-report');
+            if (activeReport === 'reporte4') {
+                loadTableDataReporte4();
+            } else {
+                loadTableData();
             }
         }
     });
