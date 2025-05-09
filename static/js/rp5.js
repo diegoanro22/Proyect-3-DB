@@ -1,4 +1,4 @@
-// rp5.js - Reporte 5: Frecuencia de Visitas de Socios
+// Reporte 5: Frecuencia de Visitas de Socios
 
 function loadReporte5() {
     configureFiltersForReporte5();
@@ -56,7 +56,7 @@ function configureFiltersForReporte5() {
 }
 
 // Datos de prueba basados en las tablas del DDL
-const sociosData = [
+const sociossData = [
     { id: 1, nombre: "Juan", apellido: "García", email: "juan.garcia@mail.com", id_plan: 1, fecha_inscripcion: "2024-12-15", activo: true },
     { id: 2, nombre: "María", apellido: "López", email: "maria.lopez@mail.com", id_plan: 2, fecha_inscripcion: "2025-01-10", activo: true },
     { id: 3, nombre: "Carlos", apellido: "Martínez", email: "carlos.martinez@mail.com", id_plan: 3, fecha_inscripcion: "2025-01-15", activo: true },
@@ -144,7 +144,7 @@ function loadTableDataReporte5() {
     const planMembresia = document.getElementById('planMembresia').value;
 
     // Calcular frecuencia de visitas por socio
-    const visitasPorSocio = sociosData.map(socio => {
+    const visitasPorSocio = sociossData.map(socio => {
         // Filtrar por nombre, apellido o email del socio
         if (nombreSocio && 
             !socio.nombre.toLowerCase().includes(nombreSocio) && 

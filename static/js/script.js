@@ -6,20 +6,38 @@ document.addEventListener("DOMContentLoaded", function() {
 
 function loadScripts() {
     return new Promise((resolve, reject) => {
-        // Cargar rp4.js y rp5.js desde la carpeta static/js
-        const script4 = document.createElement('script');
-        script4.src = '/static/js/rp4.js';
-        script4.onload = () => {
-            const script5 = document.createElement('script');
-            script5.src = '/static/js/rp5.js';
-            script5.onload = () => resolve();
-            script5.onerror = () => reject(new Error('Error al cargar rp5.js'));
-            document.head.appendChild(script5);
+        const script1 = document.createElement('script');
+        script1.src = '/static/js/rp1.js';
+        script1.onload = () => {
+            const script2 = document.createElement('script');
+            script2.src = '/static/js/rp2.js';
+            script2.onload = () => {
+                const script3 = document.createElement('script');
+                script3.src = '/static/js/rp3.js';
+                script3.onload = () => {
+                    const script4 = document.createElement('script');
+                    script4.src = '/static/js/rp4.js';
+                    script4.onload = () => {
+                        const script5 = document.createElement('script');
+                        script5.src = '/static/js/rp5.js';
+                        script5.onload = () => resolve();
+                        script5.onerror = () => reject(new Error('Error al cargar rp5.js'));
+                        document.head.appendChild(script5);
+                    };
+                    script4.onerror = () => reject(new Error('Error al cargar rp4.js'));
+                    document.head.appendChild(script4);
+                };
+                script3.onerror = () => reject(new Error('Error al cargar rp3.js'));
+                document.head.appendChild(script3);
+            };
+            script2.onerror = () => reject(new Error('Error al cargar rp2.js'));
+            document.head.appendChild(script2);
         };
-        script4.onerror = () => reject(new Error('Error al cargar rp4.js'));
-        document.head.appendChild(script4);
+        script1.onerror = () => reject(new Error('Error al cargar rp1.js'));
+        document.head.appendChild(script1);
     });
 }
+
 
 function initApp() {
     const root = document.getElementById("root");
@@ -32,11 +50,11 @@ function initApp() {
 
             <nav>
                 <ul>
-                    <li><a href="#" class="active" data-report="reporte1">Reporte 1</a></li>
-                    <li><a href="#" data-report="reporte2">Reporte 2</a></li>
-                    <li><a href="#" data-report="reporte3">Reporte 3</a></li>
-                    <li><a href="#" data-report="reporte4">Uso y Tiempos de Equipos</a></li>
-                    <li><a href="#" data-report="reporte5">Frecuencia de Visitas</a></li>
+                    <li><a href="#" class="active" data-report="reporte1">Reporte de Estado y Uso de Equipo</a></li>
+                    <li><a href="#" data-report="reporte2">Progreso Físico</a></li>
+                    <li><a href="#" data-report="reporte3">Uso de Rutinas y Calorías Quemadas</a></li>
+                    <li><a href="#" data-report="reporte4">Uso de Equipos</a></li>
+                    <li><a href="#" data-report="reporte5">Frecuencia Visitas</a></li>
                 </ul>
             </nav>
 
@@ -116,31 +134,45 @@ function loadTableData() {
 function setupEventListeners() {
     // Navegación entre reportes
     document.querySelectorAll('nav a').forEach(link => {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            document.querySelectorAll('nav a').forEach(l => l.classList.remove('active'));
-            this.classList.add('active');
-            
-            const reportType = this.getAttribute('data-report');
-            document.getElementById('reportTitle').textContent = this.textContent;
-            
-            // Cargar el reporte específico
-            switch(reportType) {
-                case 'reporte4':
-                    if (typeof window.loadReporte4 === 'function') {
-                        window.loadReporte4();
-                    }
-                    break;
-                case 'reporte5':
-                    if (typeof window.loadReporte5 === 'function') {
-                        window.loadReporte5();
-                    }
-                    break;
-                default:
-                    loadTableData();
-            }
-        });
+    link.addEventListener('click', function(e) {
+        e.preventDefault();
+        document.querySelectorAll('nav a').forEach(l => l.classList.remove('active'));
+        this.classList.add('active');
+        
+        const reportType = this.getAttribute('data-report');
+        document.getElementById('reportTitle').textContent = this.textContent;
+        
+        switch(reportType) {
+            case 'reporte1':
+                if (typeof window.loadReporte1 === 'function') {
+                    window.loadReporte1();
+                }
+                break;
+            case 'reporte2':
+                if (typeof window.loadReporte2 === 'function') {
+                    window.loadReporte2();
+                }
+                break;
+            case 'reporte3':
+                if (typeof window.loadReporte3 === 'function') {
+                    window.loadReporte3();
+                }
+                break;
+            case 'reporte4':
+                if (typeof window.loadReporte4 === 'function') {
+                    window.loadReporte4();
+                }
+                break;
+            case 'reporte5':
+                if (typeof window.loadReporte5 === 'function') {
+                    window.loadReporte5();
+                }
+                break;
+            default:
+                loadTableData();
+        }
     });
+});
 
     // Alternar entre vista de tabla y gráfico
     document.querySelectorAll('.toggle-btn').forEach(btn => {
@@ -166,7 +198,13 @@ function setupEventListeners() {
     // Botón de filtrar
     document.getElementById('btnFiltrar').addEventListener('click', function() {
         const activeReport = document.querySelector('nav a.active').getAttribute('data-report');
-        if (activeReport === 'reporte4') {
+        if (activeReport === 'reporte1') {
+            loadTableDataReporte1();
+        } else if (activeReport === 'reporte2') {
+            loadTableDataReporte2();
+        } else if (activeReport === 'reporte3') {
+            loadTableDataReporte3();
+        } else if (activeReport === 'reporte4') {
             loadTableDataReporte4();
         } else if (activeReport === 'reporte5') {
             loadTableDataReporte5();
@@ -177,7 +215,13 @@ function setupEventListeners() {
     document.getElementById('btnLimpiar').addEventListener('click', function() {
         document.getElementById('filterForm').reset();
         const activeReport = document.querySelector('nav a.active').getAttribute('data-report');
-        if (activeReport === 'reporte4') {
+        if (activeReport === 'reporte1') {
+            loadTableDataReporte1();
+        } else if (activeReport === 'reporte2') {
+            loadTableDataReporte2();
+        } else if (activeReport === 'reporte3') {
+            loadTableDataReporte3();
+        } else if (activeReport === 'reporte4') {
             loadTableDataReporte4();
         } else if (activeReport === 'reporte5') {
             loadTableDataReporte5();
@@ -211,7 +255,13 @@ function setupEventListeners() {
 
 function handlePagination() {
     const activeReport = document.querySelector('nav a.active').getAttribute('data-report');
-    if (activeReport === 'reporte4') {
+    if (activeReport === 'reporte1') {
+        loadTableDataReporte1();
+    } else if (activeReport === 'reporte2') {
+        loadTableDataReporte2();
+    } else if (activeReport === 'reporte3') {
+        loadTableDataReporte3();
+    } else if (activeReport === 'reporte4') {
         loadTableDataReporte4();
     } else if (activeReport === 'reporte5') {
         loadTableDataReporte5();
@@ -219,6 +269,24 @@ function handlePagination() {
 }
 
 // Funciones globales para llamadas desde los reportes
+window.loadTableDataReporte1 = function() {
+    if (typeof window.loadReporte1 === 'function') {
+        window.loadReporte1();
+    }
+};
+
+window.loadTableDataReporte2 = function() {
+    if (typeof window.loadReporte2 === 'function') {
+        window.loadReporte2();
+    }
+};
+
+window.loadTableDataReporte3 = function() {
+    if (typeof window.loadReporte3 === 'function') {
+        window.loadReporte3();
+    }
+};
+
 window.loadTableDataReporte4 = function() {
     if (typeof window.loadReporte4 === 'function') {
         window.loadReporte4();
