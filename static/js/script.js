@@ -4,15 +4,20 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 });
 
-// Modificar la función loadScripts en script.js
 function loadScripts() {
     return new Promise((resolve, reject) => {
-        // Cargar rp4.js desde la carpeta static/js
-        const script = document.createElement('script');
-        script.src = '/static/js/rp4.js';  // Ruta actualizada
-        script.onload = () => resolve();
-        script.onerror = () => reject(new Error('Error al cargar rp4.js'));
-        document.head.appendChild(script);
+        // Cargar rp4.js y rp5.js desde la carpeta static/js
+        const script4 = document.createElement('script');
+        script4.src = '/static/js/rp4.js';
+        script4.onload = () => {
+            const script5 = document.createElement('script');
+            script5.src = '/static/js/rp5.js';
+            script5.onload = () => resolve();
+            script5.onerror = () => reject(new Error('Error al cargar rp5.js'));
+            document.head.appendChild(script5);
+        };
+        script4.onerror = () => reject(new Error('Error al cargar rp4.js'));
+        document.head.appendChild(script4);
     });
 }
 
@@ -22,7 +27,7 @@ function initApp() {
         <div class="container">
             <header>
                 <h1><i class="fas fa-database"></i> Sistema de Reportes</h1>
-                <p>Proyecto 3 - Bases de Datos </p>
+                <p>Proyecto 3 - Bases de Datos</p>
             </header>
 
             <nav>
@@ -31,7 +36,7 @@ function initApp() {
                     <li><a href="#" data-report="reporte2">Reporte 2</a></li>
                     <li><a href="#" data-report="reporte3">Reporte 3</a></li>
                     <li><a href="#" data-report="reporte4">Uso y Tiempos de Equipos</a></li>
-                    <li><a href="#" data-report="reporte5">Reporte 5</a></li>
+                    <li><a href="#" data-report="reporte5">Frecuencia de Visitas</a></li>
                 </ul>
             </nav>
 
@@ -39,35 +44,7 @@ function initApp() {
                 <section class="filters">
                     <h2>Filtros</h2>
                     <div id="filterForm">
-                        <div class="filter-group">
-                            <label for="fechaInicio">Fecha Inicio:</label>
-                            <input type="date" id="fechaInicio" name="fechaInicio">
-                        </div>
-                        <div class="filter-group">
-                            <label for="fechaFin">Fecha Fin:</label>
-                            <input type="date" id="fechaFin" name="fechaFin">
-                        </div>
-                        <div class="filter-group">
-                            <label for="filtro3">Categoría:</label>
-                            <select id="filtro3" name="filtro3">
-                                <option value="">Seleccionar</option>
-                                <option value="opcion1">Opción 1</option>
-                                <option value="opcion2">Opción 2</option>
-                                <option value="opcion3">Opción 3</option>
-                            </select>
-                        </div>
-                        <div class="filter-group">
-                            <label for="filtro4">Nombre/ID:</label>
-                            <input type="text" id="filtro4" name="filtro4" placeholder="Ingrese valor...">
-                        </div>
-                        <div class="filter-group">
-                            <label for="filtro5">Monto Máximo:</label>
-                            <input type="number" id="filtro5" name="filtro5" placeholder="0">
-                        </div>
-                        <div class="filter-group">
-                            <button type="button" id="btnFiltrar">Aplicar Filtros</button>
-                            <button type="button" id="btnLimpiar">Limpiar Filtros</button>
-                        </div>
+                        <!-- Los filtros se cargarán dinámicamente según el reporte -->
                     </div>
                 </section>
 
@@ -128,56 +105,16 @@ function initApp() {
 
 let currentPage = 1;
 const rowsPerPage = 10;
-const allData = [
-    ["001", "2025-05-07", "Categoría A", "Descripción 1", "$100.00"],
-    ["002", "2025-05-06", "Categoría B", "Descripción 2", "$200.00"],
-    ["003", "2025-05-05", "Categoría C", "Descripción 3", "$300.00"],
-    ["004", "2025-05-04", "Categoría D", "Descripción 4", "$400.00"],
-    ["005", "2025-05-03", "Categoría E", "Descripción 5", "$500.00"],
-    ["006", "2025-05-02", "Categoría F", "Descripción 6", "$600.00"],
-    ["007", "2025-05-01", "Categoría G", "Descripción 7", "$700.00"],
-    ["008", "2025-04-30", "Categoría H", "Descripción 8", "$800.00"],
-    ["009", "2025-04-29", "Categoría I", "Descripción 9", "$900.00"],
-    ["010", "2025-04-28", "Categoría J", "Descripción 10", "$1000.00"],
-    ["011", "2025-04-27", "Categoría K", "Descripción 11", "$1100.00"],
-    ["012", "2025-04-26", "Categoría L", "Descripción 12", "$1200.00"],
-    ["013", "2025-05-07", "Categoría A", "Descripción 1", "$100.00"],
-    ["014", "2025-05-06", "Categoría B", "Descripción 2", "$200.00"],
-    ["015", "2025-05-05", "Categoría C", "Descripción 3", "$300.00"],
-    ["016", "2025-05-04", "Categoría D", "Descripción 4", "$400.00"],
-    ["017", "2025-05-03", "Categoría E", "Descripción 5", "$500.00"],
-    ["018", "2025-05-02", "Categoría F", "Descripción 6", "$600.00"],
-    ["019", "2025-05-01", "Categoría G", "Descripción 7", "$700.00"],
-    ["020", "2025-04-30", "Categoría H", "Descripción 8", "$800.00"],
-    ["021", "2025-04-29", "Categoría I", "Descripción 9", "$900.00"],
-    ["022", "2025-04-28", "Categoría J", "Descripción 10", "$1000.00"],
-    ["023", "2025-04-27", "Categoría K", "Descripción 11", "$1100.00"],
-    ["024", "2025-04-26", "Categoría L", "Descripción 12", "$1200.00"]
-];
-let totalPages = Math.ceil(allData.length / rowsPerPage);
+let totalPages = 1;
 
 function loadTableData() {
     const tableBody = document.getElementById('tableBody');
-    tableBody.innerHTML = '';
-
-    const start = (currentPage - 1) * rowsPerPage;
-    const end = start + rowsPerPage;
-    const pageData = allData.slice(start, end);
-
-    pageData.forEach(row => {
-        const tr = document.createElement('tr');
-        row.forEach(cell => {
-            const td = document.createElement('td');
-            td.textContent = cell;
-            tr.appendChild(td);
-        });
-        tableBody.appendChild(tr);
-    });
-
-    renderPagination();
+    tableBody.innerHTML = '<tr><td colspan="5">Seleccione un reporte</td></tr>';
+    document.getElementById('pageInfo').textContent = 'Página 1 de 1';
 }
 
 function setupEventListeners() {
+    // Navegación entre reportes
     document.querySelectorAll('nav a').forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
@@ -188,19 +125,24 @@ function setupEventListeners() {
             document.getElementById('reportTitle').textContent = this.textContent;
             
             // Cargar el reporte específico
-            if (reportType === 'reporte4') {
-                if (typeof window.loadReporte4 === 'function') {
-                    window.loadReporte4();
-                } else {
-                    console.error('La función loadReporte4 no está disponible');
-                }
-            } else {
-                // Cargar el reporte predeterminado para otros tipos
-                loadTableData();
+            switch(reportType) {
+                case 'reporte4':
+                    if (typeof window.loadReporte4 === 'function') {
+                        window.loadReporte4();
+                    }
+                    break;
+                case 'reporte5':
+                    if (typeof window.loadReporte5 === 'function') {
+                        window.loadReporte5();
+                    }
+                    break;
+                default:
+                    loadTableData();
             }
         });
     });
 
+    // Alternar entre vista de tabla y gráfico
     document.querySelectorAll('.toggle-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
@@ -213,33 +155,36 @@ function setupEventListeners() {
             if (viewType === 'chart') {
                 const activeReport = document.querySelector('nav a.active').getAttribute('data-report');
                 if (activeReport === 'reporte4' && typeof window.renderChartReporte4 === 'function') {
-                    // Si estamos en el reporte 4, usamos su función específica de gráficos
                     loadTableDataReporte4();
-                } else {
-                    // Para otros reportes usamos la función genérica
-                    renderChart();
+                } else if (activeReport === 'reporte5' && typeof window.renderChartReporte5 === 'function') {
+                    loadTableDataReporte5();
                 }
             }
         });
     });
 
+    // Botón de filtrar
     document.getElementById('btnFiltrar').addEventListener('click', function() {
         const activeReport = document.querySelector('nav a.active').getAttribute('data-report');
         if (activeReport === 'reporte4') {
             loadTableDataReporte4();
-        } else {
-            alert('Filtrar aplicado (simulado)');
+        } else if (activeReport === 'reporte5') {
+            loadTableDataReporte5();
         }
     });
 
+    // Botón de limpiar filtros
     document.getElementById('btnLimpiar').addEventListener('click', function() {
         document.getElementById('filterForm').reset();
         const activeReport = document.querySelector('nav a.active').getAttribute('data-report');
         if (activeReport === 'reporte4') {
             loadTableDataReporte4();
+        } else if (activeReport === 'reporte5') {
+            loadTableDataReporte5();
         }
     });
 
+    // Botones de exportación
     document.getElementById('btnExportPDF').addEventListener('click', function() {
         alert('Exportar a PDF conectado');
     });
@@ -248,29 +193,40 @@ function setupEventListeners() {
         alert('Exportar a Excel conectado');
     });
 
+    // Paginación
     document.getElementById('prevPage').addEventListener('click', function() {
         if (currentPage > 1) {
             currentPage--;
-            
-            const activeReport = document.querySelector('nav a.active').getAttribute('data-report');
-            if (activeReport === 'reporte4') {
-                loadTableDataReporte4();
-            } else {
-                loadTableData();
-            }
+            handlePagination();
         }
     });
 
     document.getElementById('nextPage').addEventListener('click', function() {
         if (currentPage < totalPages) {
             currentPage++;
-            
-            const activeReport = document.querySelector('nav a.active').getAttribute('data-report');
-            if (activeReport === 'reporte4') {
-                loadTableDataReporte4();
-            } else {
-                loadTableData();
-            }
+            handlePagination();
         }
     });
 }
+
+function handlePagination() {
+    const activeReport = document.querySelector('nav a.active').getAttribute('data-report');
+    if (activeReport === 'reporte4') {
+        loadTableDataReporte4();
+    } else if (activeReport === 'reporte5') {
+        loadTableDataReporte5();
+    }
+}
+
+// Funciones globales para llamadas desde los reportes
+window.loadTableDataReporte4 = function() {
+    if (typeof window.loadReporte4 === 'function') {
+        window.loadReporte4();
+    }
+};
+
+window.loadTableDataReporte5 = function() {
+    if (typeof window.loadReporte5 === 'function') {
+        window.loadReporte5();
+    }
+};
