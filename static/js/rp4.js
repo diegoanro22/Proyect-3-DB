@@ -1,12 +1,41 @@
 // rp4.js - Reporte 4: Uso y Tiempos de Equipos
 
 function loadReporte4() {
-    configureFiltersForReporte4();
-    loadTableDataReporte4();
+    // Para evitar conflictos con otras variables globales
+    try {
+        console.log("Cargando Reporte 4...");
+        configureFiltersForReporte4();
+        loadTableDataReporte4();
+    } catch (error) {
+        console.error("Error al cargar Reporte 4:", error);
+    }
 }
 
-function configureFiltersForReporte4() {
+async function configureFiltersForReporte4() {
     const filterForm = document.getElementById('filterForm');
+    
+    // Verificar si filterForm existe antes de continuar
+    if (!filterForm) {
+        console.error("Elemento 'filterForm' no encontrado");
+        return;
+    }
+    
+    // Cargar marcas de equipos desde la API
+    let marcasOptions = '<option value="">Todas las marcas</option>';
+    try {
+        const response = await fetch('/api/marcas-equipos/');
+        if (response.ok) {
+            const marcas = await response.json();
+            marcasOptions += marcas.map(marca =>
+                `<option value="${marca}">${marca}</option>`
+            ).join('');
+        } else {
+            console.error('Error al cargar marcas:', response.statusText);
+        }
+    } catch (error) {
+        console.error('Error en la solicitud de marcas:', error);
+    }
+    
     filterForm.innerHTML = `
         <div class="filter-group">
             <label for="nombreEquipo">Equipo:</label>
@@ -15,12 +44,7 @@ function configureFiltersForReporte4() {
         <div class="filter-group">
             <label for="marca">Marca:</label>
             <select id="marca" name="marca">
-                <option value="">Todas las marcas</option>
-                <option value="Life Fitness">Life Fitness</option>
-                <option value="Technogym">Technogym</option>
-                <option value="Precor">Precor</option>
-                <option value="Hammer Strength">Hammer Strength</option>
-                <option value="Reebok">Reebok</option>
+                ${marcasOptions}
             </select>
         </div>
         <div class="filter-group">
@@ -62,168 +86,85 @@ function configureFiltersForReporte4() {
         </div>
     `;
 
-    // Re-attach event listeners after modifying the form
-    document.getElementById('btnFiltrar').addEventListener('click', function() {
-        loadTableDataReporte4();
-    });
-
-    document.getElementById('btnLimpiar').addEventListener('click', function() {
-        document.getElementById('filterForm').reset();
-        loadTableDataReporte4();
-    });
-}
-
-// Datos de prueba basados en las tablas del DDL
-const equiposData = [
-    { id: 1, nombre: "Prensa de piernas", marca: "Life Fitness", modelo: "LP500", id_sala: 1, estado: "Bueno" },
-    { id: 2, nombre: "Cinta de correr", marca: "Technogym", modelo: "Run700", id_sala: 2, estado: "Nuevo" },
-    { id: 3, nombre: "Banco plano", marca: "Hammer Strength", modelo: "BF-610", id_sala: 1, estado: "Bueno" },
-    { id: 4, nombre: "Mancuernas", marca: "Reebok", modelo: "Hex 5-30kg", id_sala: 3, estado: "Regular" },
-    { id: 5, nombre: "Bicicleta estática", marca: "Precor", modelo: "UBK 615", id_sala: 2, estado: "Bueno" },
-    { id: 6, nombre: "Máquina de remo", marca: "Concept2", modelo: "Model D", id_sala: 2, estado: "Nuevo" },
-    { id: 7, nombre: "Polea alta", marca: "Hammer Strength", modelo: "PL-255", id_sala: 1, estado: "Bueno" },
-    { id: 8, nombre: "TRX", marca: "TRX", modelo: "Pro4", id_sala: 3, estado: "Bueno" },
-    { id: 9, nombre: "Elíptica", marca: "Life Fitness", modelo: "E5", id_sala: 2, estado: "Regular" },
-    { id: 10, nombre: "Pesa rusa", marca: "Reebok", modelo: "Pro 4-32kg", id_sala: 3, estado: "Bueno" }
-];
-
-const salasData = [
-    { id: 1, nombre: "Sala de Pesas", capacidad: 40 },
-    { id: 2, nombre: "Área Cardiovascular", capacidad: 30 },
-    { id: 3, nombre: "Zona Funcional", capacidad: 25 },
-    { id: 4, nombre: "Estudio de Yoga", capacidad: 20 },
-    { id: 5, nombre: "Sala de Máquinas", capacidad: 35 }
-];
-
-const ejerciciosData = [
-    { id: 1, nombre: "Press de piernas", grupo_muscular: "Piernas", tipo_ejercicio: "Fuerza", id_equipo: 1 },
-    { id: 2, nombre: "Carrera 5k", grupo_muscular: "Cardio", tipo_ejercicio: "Resistencia", id_equipo: 2 },
-    { id: 3, nombre: "Press de banca", grupo_muscular: "Pecho", tipo_ejercicio: "Fuerza", id_equipo: 3 },
-    { id: 4, nombre: "Curl de bíceps", grupo_muscular: "Brazos", tipo_ejercicio: "Fuerza", id_equipo: 4 },
-    { id: 5, nombre: "Ciclismo estático", grupo_muscular: "Piernas", tipo_ejercicio: "Resistencia", id_equipo: 5 },
-    { id: 6, nombre: "Remo", grupo_muscular: "Espalda", tipo_ejercicio: "Potencia", id_equipo: 6 },
-    { id: 7, nombre: "Jalón al pecho", grupo_muscular: "Espalda", tipo_ejercicio: "Fuerza", id_equipo: 7 },
-    { id: 8, nombre: "TRX Rows", grupo_muscular: "Espalda", tipo_ejercicio: "Fuerza", id_equipo: 8 },
-    { id: 9, nombre: "Elíptica HIIT", grupo_muscular: "Cardio", tipo_ejercicio: "Resistencia", id_equipo: 9 },
-    { id: 10, nombre: "Swing", grupo_muscular: "Cuerpo completo", tipo_ejercicio: "Potencia", id_equipo: 10 },
-    { id: 11, nombre: "Sentadilla con barra", grupo_muscular: "Piernas", tipo_ejercicio: "Fuerza", id_equipo: 4 },
-    { id: 12, nombre: "Zancadas", grupo_muscular: "Piernas", tipo_ejercicio: "Fuerza", id_equipo: 4 }
-];
-
-const rutinasData = [
-    { id: 1, nombre: "Full Body Principiante", nivel: "Principiante", duracion_estimada_min: 45, fecha_creacion: "2025-01-10" },
-    { id: 2, nombre: "Definición Avanzada", nivel: "Avanzado", duracion_estimada_min: 60, fecha_creacion: "2025-02-15" },
-    { id: 3, nombre: "Cardio HIIT", nivel: "Intermedio", duracion_estimada_min: 30, fecha_creacion: "2025-03-20" },
-    { id: 4, nombre: "Upper Body", nivel: "Intermedio", duracion_estimada_min: 45, fecha_creacion: "2025-04-05" },
-    { id: 5, nombre: "Lower Body", nivel: "Intermedio", duracion_estimada_min: 45, fecha_creacion: "2025-05-01" }
-];
-
-const rutinaEjerciciosData = [
-    { id_rutina: 1, id_ejercicio: 3, series: 3, repeticiones: 12 },
-    { id_rutina: 1, id_ejercicio: 4, series: 3, repeticiones: 15 },
-    { id_rutina: 1, id_ejercicio: 7, series: 3, repeticiones: 10 },
-    { id_rutina: 1, id_ejercicio: 11, series: 3, repeticiones: 12 },
-    { id_rutina: 2, id_ejercicio: 1, series: 4, repeticiones: 10 },
-    { id_rutina: 2, id_ejercicio: 3, series: 4, repeticiones: 8 },
-    { id_rutina: 2, id_ejercicio: 7, series: 4, repeticiones: 10 },
-    { id_rutina: 2, id_ejercicio: 4, series: 4, repeticiones: 12 },
-    { id_rutina: 2, id_ejercicio: 10, series: 4, repeticiones: 15 },
-    { id_rutina: 3, id_ejercicio: 2, series: 1, repeticiones: 1 },
-    { id_rutina: 3, id_ejercicio: 5, series: 1, repeticiones: 1 },
-    { id_rutina: 3, id_ejercicio: 9, series: 1, repeticiones: 1 },
-    { id_rutina: 4, id_ejercicio: 3, series: 4, repeticiones: 10 },
-    { id_rutina: 4, id_ejercicio: 4, series: 3, repeticiones: 12 },
-    { id_rutina: 4, id_ejercicio: 7, series: 4, repeticiones: 10 },
-    { id_rutina: 4, id_ejercicio: 8, series: 3, repeticiones: 15 },
-    { id_rutina: 5, id_ejercicio: 1, series: 4, repeticiones: 12 },
-    { id_rutina: 5, id_ejercicio: 11, series: 4, repeticiones: 10 },
-    { id_rutina: 5, id_ejercicio: 12, series: 3, repeticiones: 12 }
-];
-
-// Función para generar el reporte
-function loadTableDataReporte4() {
-    // Obtener valores de los filtros
-    const nombreEquipo = document.getElementById('nombreEquipo').value.toLowerCase();
-    const marca = document.getElementById('marca').value;
-    const modelo = document.getElementById('modelo').value.toLowerCase();
-    const sala = document.getElementById('sala').value;
-    const fechaInicio = document.getElementById('fechaInicioRutina').value;
-    const fechaFin = document.getElementById('fechaFinRutina').value;
-    const tipoEjercicio = document.getElementById('tipoEjercicio').value;
-
-    // Calcular estadísticas de equipos basado en los datos de prueba
-    const equiposUso = equiposData.map(equipo => {
-        // Filtrar por nombre, marca, modelo y sala del equipo
-        if ((nombreEquipo && !equipo.nombre.toLowerCase().includes(nombreEquipo)) ||
-            (marca && equipo.marca !== marca) ||
-            (modelo && !equipo.modelo.toLowerCase().includes(modelo)) ||
-            (sala && equipo.id_sala.toString() !== sala)) {
-            return null;
-        }
-
-        // Obtener ejercicios que usan este equipo
-        const ejerciciosDelEquipo = ejerciciosData.filter(ejercicio => 
-            ejercicio.id_equipo === equipo.id && 
-            (!tipoEjercicio || ejercicio.tipo_ejercicio === tipoEjercicio)
-        );
-
-        if (ejerciciosDelEquipo.length === 0) {
-            return null;
-        }
-
-        // Obtener rutinas que incluyen estos ejercicios
-        let usosTotales = 0;
-        let duracionTotal = 0;
-        let rutinasQueUsan = new Set();
-
-        ejerciciosDelEquipo.forEach(ejercicio => {
-            rutinaEjerciciosData.forEach(rutinaEjercicio => {
-                if (rutinaEjercicio.id_ejercicio === ejercicio.id) {
-                    const rutina = rutinasData.find(r => r.id === rutinaEjercicio.id_rutina);
-                    
-                    // Filtrar por fecha de creación de rutina
-                    if (fechaInicio && rutina.fecha_creacion < fechaInicio) return;
-                    if (fechaFin && rutina.fecha_creacion > fechaFin) return;
-                    
-                    usosTotales++;
-                    duracionTotal += rutina.duracion_estimada_min;
-                    rutinasQueUsan.add(rutina.id);
-                }
-            });
+    // Re-attach event listeners con verificación
+    const btnFiltrar = document.getElementById('btnFiltrar');
+    if (btnFiltrar) {
+        btnFiltrar.addEventListener('click', function() {
+            loadTableDataReporte4();
         });
+    }
 
-        if (usosTotales === 0) {
-            return null;
-        }
-
-        // Obtener el nombre de la sala
-        const nombreSala = salasData.find(s => s.id === equipo.id_sala).nombre;
-
-        return {
-            id: equipo.id,
-            nombre: equipo.nombre,
-            marca: equipo.marca,
-            modelo: equipo.modelo,
-            sala: nombreSala,
-            usos: usosTotales,
-            duracionTotal: duracionTotal,
-            duracionMedia: Math.round(duracionTotal / usosTotales),
-            rutinasUnicas: rutinasQueUsan.size
-        };
-    }).filter(item => item !== null);
-
-    // Actualizar tabla
-    updateTableWithData(equiposUso);
-    
-    // Actualizar gráfico si está activo
-    if (document.getElementById('chartView').classList.contains('active')) {
-        renderChartReporte4(equiposUso);
+    const btnLimpiar = document.getElementById('btnLimpiar');
+    if (btnLimpiar) {
+        btnLimpiar.addEventListener('click', function() {
+            const filterForm = document.getElementById('filterForm');
+            if (filterForm) filterForm.reset();
+            loadTableDataReporte4();
+        });
     }
 }
 
-function updateTableWithData(data) {
+async function loadTableDataReporte4() {
+    try {
+        console.log("Cargando datos de uso de equipos...");
+        // Obtener valores de los filtros con verificación
+        const nombreEquipoEl = document.getElementById('nombreEquipo');
+        const marcaEl = document.getElementById('marca');
+        const modeloEl = document.getElementById('modelo');
+        const salaEl = document.getElementById('sala');
+        const fechaInicioEl = document.getElementById('fechaInicioRutina');
+        const fechaFinEl = document.getElementById('fechaFinRutina');
+        const tipoEjercicioEl = document.getElementById('tipoEjercicio');
+        
+        const nombreEquipo = nombreEquipoEl ? nombreEquipoEl.value : '';
+        const marca = marcaEl ? marcaEl.value : '';
+        const modelo = modeloEl ? modeloEl.value : '';
+        const sala = salaEl ? salaEl.value : '';
+        const fechaInicioRutina = fechaInicioEl ? fechaInicioEl.value : '';
+        const fechaFinRutina = fechaFinEl ? fechaFinEl.value : '';
+        const tipoEjercicio = tipoEjercicioEl ? tipoEjercicioEl.value : '';
+
+        // Construir URL con parámetros para la API
+        let url = new URL('/api/uso-equipos/', window.location.origin);
+        if (nombreEquipo) url.searchParams.append('nombreEquipo', nombreEquipo);
+        if (marca) url.searchParams.append('marca', marca);
+        if (modelo) url.searchParams.append('modelo', modelo);
+        if (sala) url.searchParams.append('sala', sala);
+        if (fechaInicioRutina) url.searchParams.append('fechaInicioRutina', fechaInicioRutina);
+        if (fechaFinRutina) url.searchParams.append('fechaFinRutina', fechaFinRutina);
+        if (tipoEjercicio) url.searchParams.append('tipoEjercicio', tipoEjercicio);
+
+        // Realizar petición a la API
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            throw new Error(`Error en la petición a la API: ${response.statusText}`);
+        }
+
+        const equiposUso = await response.json();
+
+        // Actualizar tabla
+        updateTableWithDataReporte4(equiposUso);
+
+        // Mostrar gráfico si está activo
+        const chartView = document.getElementById('chartView');
+        if (chartView && chartView.classList.contains('active')) {
+            renderChartReporte4(equiposUso);
+        }
+    } catch (error) {
+        console.error('Error en loadTableDataReporte4:', error);
+    }
+}
+
+function updateTableWithDataReporte4(data) {
     const tableHead = document.querySelector('#resultsTable thead');
     const tableBody = document.getElementById('tableBody');
+    
+    // Verificar si los elementos existen
+    if (!tableHead || !tableBody) {
+        console.error('Elementos de tabla no encontrados');
+        return;
+    }
     
     // Actualizar encabezados
     tableHead.innerHTML = `
@@ -247,7 +188,10 @@ function updateTableWithData(data) {
         const tr = document.createElement('tr');
         tr.innerHTML = '<td colspan="8" class="no-data">No se encontraron datos con los filtros aplicados</td>';
         tableBody.appendChild(tr);
-        document.getElementById('pageInfo').textContent = 'Página 0 de 0';
+        const pageInfoEl = document.getElementById('pageInfo');
+        if (pageInfoEl) {
+            pageInfoEl.textContent = 'Página 0 de 0';
+        }
         return;
     }
     
@@ -269,76 +213,234 @@ function updateTableWithData(data) {
             <td>${item.modelo}</td>
             <td>${item.sala}</td>
             <td>${item.usos}</td>
-            <td>${item.duracionTotal}</td>
-            <td>${item.duracionMedia}</td>
-            <td>${item.rutinasUnicas}</td>
+            <td>${item.duracion_total}</td>
+            <td>${item.duracion_media}</td>
+            <td>${item.rutinas_unicas}</td>
         `;
         tableBody.appendChild(tr);
     });
     
-    document.getElementById('pageInfo').textContent = `Página ${currentPage} de ${totalPages}`;
+    const pageInfoEl = document.getElementById('pageInfo');
+    if (pageInfoEl) {
+        pageInfoEl.textContent = `Página ${currentPage} de ${totalPages}`;
+    }
     
     // Actualizar botones de paginación
-    document.getElementById('prevPage').disabled = currentPage === 1;
-    document.getElementById('nextPage').disabled = currentPage === totalPages;
+    const prevPageBtn = document.getElementById('prevPage');
+    const nextPageBtn = document.getElementById('nextPage');
+    
+    if (prevPageBtn) prevPageBtn.disabled = currentPage === 1;
+    if (nextPageBtn) nextPageBtn.disabled = currentPage === totalPages;
 }
 
-function renderChartReporte4(data) {
-    const ctx = document.getElementById('reportChart').getContext('2d');
+async function renderChartReporte4(data) {
+    const reportChartEl = document.getElementById('reportChart');
+    if (!reportChartEl) {
+        console.error('Elemento reportChart no encontrado');
+        return;
+    }
+    const ctx = reportChartEl.getContext('2d');
     
     // Destruir gráfico existente si hay uno
     if (window.reportChart && typeof window.reportChart.destroy === 'function') {
         window.reportChart.destroy();
     }
     
-    // Ordenar datos por número de usos descendente para mejor visualización
-    const sortedData = [...data].sort((a, b) => b.usos - a.usos);
+    // Verificar si no hay datos
+    if (data.length === 0) {
+        // Mostrar mensaje en el canvas
+        ctx.clearRect(0, 0, reportChartEl.width, reportChartEl.height);
+        ctx.font = '16px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('No hay datos disponibles para el gráfico', reportChartEl.width / 2, reportChartEl.height / 2);
+        return;
+    }
     
-    // Limitar a los 10 más usados para no saturar el gráfico
-    const chartData = sortedData.slice(0, 10);
-    
-    // Preparar datos para el gráfico
-    const labels = chartData.map(item => `${item.nombre} (${item.marca})`);
-    const usosData = chartData.map(item => item.usos);
-    const duracionData = chartData.map(item => item.duracionMedia);
-    
-    // Crear gráfico
-    window.reportChart = new Chart(ctx, {
-        type: 'horizontalBar',
-        data: {
-            labels: labels,
-            datasets: [
-                {
+    try {
+        // Obtener los equipos más usados desde la API
+        const response = await fetch('/api/top-equipos-usados/?limite=10');
+        if (!response.ok) {
+            throw new Error('Error al obtener los equipos más usados');
+        }
+        
+        const topEquipos = await response.json();
+        
+        // Preparar datos para el gráfico
+        const labels = topEquipos.map(item => `${item.nombre} (${item.marca})`);
+        const usosData = topEquipos.map(item => item.usos_totales);
+        
+        // Crear gráfico
+        window.reportChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
                     label: 'Número de usos en rutinas',
                     data: usosData,
                     backgroundColor: 'rgba(54, 162, 235, 0.7)',
                     borderColor: 'rgba(54, 162, 235, 1)',
                     borderWidth: 1
-                }
-            ]
-        },
-        options: {
-            indexAxis: 'y',
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                x: {
-                    beginAtZero: true
-                }
+                }]
             },
-            plugins: {
-                tooltip: {
-                    callbacks: {
-                        afterLabel: function(context) {
-                            const index = context.dataIndex;
-                            return `Duración media: ${duracionData[index]} min`;
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Número de usos'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Equipo'
+                        }
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Equipos más utilizados',
+                        font: {
+                            size: 16
+                        }
+                    },
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    }
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error al renderizar el gráfico:', error);
+        ctx.clearRect(0, 0, reportChartEl.width, reportChartEl.height);
+        ctx.font = '16px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('Error al cargar el gráfico', reportChartEl.width / 2, reportChartEl.height / 2);
+    }
+}
+
+// Añadir vista por sala
+async function renderSalaChartReporte4() {
+    const reportChartEl = document.getElementById('reportChart');
+    if (!reportChartEl) {
+        console.error('Elemento reportChart no encontrado');
+        return;
+    }
+    const ctx = reportChartEl.getContext('2d');
+    
+    // Destruir gráfico existente si hay uno
+    if (window.reportChart && typeof window.reportChart.destroy === 'function') {
+        window.reportChart.destroy();
+    }
+    
+    try {
+        // Obtener fechas seleccionadas para filtrar
+        const fechaInicio = document.getElementById('fechaInicioRutina').value;
+        const fechaFin = document.getElementById('fechaFinRutina').value;
+        
+        // Construir URL con parámetros
+        let url = new URL('/api/uso-equipos-por-sala/', window.location.origin);
+        if (fechaInicio) url.searchParams.append('fechaInicio', fechaInicio);
+        if (fechaFin) url.searchParams.append('fechaFin', fechaFin);
+        
+        // Obtener datos de uso por sala
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error('Error al obtener el uso por sala');
+        }
+        
+        const usoPorSala = await response.json();
+        
+        // Verificar si no hay datos
+        if (usoPorSala.length === 0) {
+            ctx.clearRect(0, 0, reportChartEl.width, reportChartEl.height);
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('No hay datos disponibles para el gráfico', reportChartEl.width / 2, reportChartEl.height / 2);
+            return;
+        }
+        
+        // Preparar datos para el gráfico
+        const labels = usoPorSala.map(item => item.sala);
+        const usosData = usoPorSala.map(item => item.usos_totales);
+        const duracionData = usoPorSala.map(item => item.duracion_media);
+        
+        // Crear gráfico
+        window.reportChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Usos totales',
+                        data: usosData,
+                        backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Duración media (min)',
+                        data: duracionData,
+                        backgroundColor: 'rgba(255, 99, 132, 0.7)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1,
+                        type: 'line',
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: 'Usos totales'
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        grid: {
+                            drawOnChartArea: false
+                        },
+                        title: {
+                            display: true,
+                            text: 'Duración media (min)'
+                        }
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Uso de equipos por sala',
+                        font: {
+                            size: 16
                         }
                     }
                 }
             }
-        }
-    });
+        });
+    } catch (error) {
+        console.error('Error al renderizar el gráfico de salas:', error);
+        ctx.clearRect(0, 0, reportChartEl.width, reportChartEl.height);
+        ctx.font = '16px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('Error al cargar el gráfico', reportChartEl.width / 2, reportChartEl.height / 2);
+    }
 }
 
-// Expose function for script.js to call
+// Exponer función para que script.js pueda llamarla
 window.loadReporte4 = loadReporte4;

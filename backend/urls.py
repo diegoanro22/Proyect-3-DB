@@ -39,7 +39,13 @@ urlpatterns = [
     path('api/registros-rutinas/', reportes_views.get_registros_rutinas, name='api_registros_rutinas'),
     path('api/calorias-por-rutina/', reportes_views.get_calorias_por_rutina, name='api_calorias_por_rutina'),
     path('api/tendencia-calorias-semanal/', reportes_views.get_tendencia_calorias_semanal, name='api_tendencia_calorias_semanal'),
-
+    
+    # APIs para Reporte 4: Uso y Tiempos de Equipos
+    path('api/equipos-disponibles/', reportes_views.get_equipos_disponibles, name='api_equipos_disponibles'),
+    path('api/marcas-equipos/', reportes_views.get_marcas_equipos, name='api_marcas_equipos'),
+    path('api/uso-equipos/', reportes_views.get_uso_equipos, name='api_uso_equipos'),
+    path('api/uso-equipos-por-sala/', reportes_views.get_uso_equipos_por_sala, name='api_uso_equipos_por_sala'),
+    path('api/top-equipos-usados/', reportes_views.get_top_equipos_usados, name='api_top_equipos_usados'),
     
     # APIs para Reporte 5: 
     path('api/frecuencia-visitas/', reportes_views.get_frecuencia_visitas, name='api_frecuencia_visitas'),

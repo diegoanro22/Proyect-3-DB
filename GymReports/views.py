@@ -559,6 +559,201 @@ def get_tendencia_calorias_semanal(request):
 
 
 
+
+#############
+# Reporte 4 #
+#############
+
+@require_GET
+def get_equipos_disponibles(request):
+    """Devuelve todos los equipos disponibles"""
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT id_equipo as id, nombre_equipo as nombre, marca, modelo
+            FROM equipos
+            ORDER BY nombre_equipo
+        """)
+        equipos = dictfetchall(cursor)
+
+    return JsonResponse(equipos, safe=False)
+
+
+@require_GET
+def get_marcas_equipos(request):
+    """Devuelve todas las marcas de equipos disponibles"""
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT DISTINCT marca 
+            FROM equipos
+            ORDER BY marca
+        """)
+        marcas = [row[0] for row in cursor.fetchall()]
+
+    return JsonResponse(marcas, safe=False)
+
+
+@require_GET
+def get_uso_equipos(request):
+    """Devuelve los datos de uso de equipos con filtros opcionales"""
+    nombre_equipo = request.GET.get('nombreEquipo', '')
+    marca = request.GET.get('marca', '')
+    modelo = request.GET.get('modelo', '')
+    sala = request.GET.get('sala', '')
+    fecha_inicio_rutina = request.GET.get('fechaInicioRutina', '')
+    fecha_fin_rutina = request.GET.get('fechaFinRutina', '')
+    tipo_ejercicio = request.GET.get('tipoEjercicio', '')
+
+    query = """
+        SELECT 
+            e.id_equipo,
+            e.nombre_equipo as nombre,
+            e.marca,
+            e.modelo,
+            s.nombre_sala as sala,
+            COUNT(DISTINCT re.id_registro) as usos,
+            SUM(COALESCE(re.fecha_hora_fin - re.fecha_hora_inicio, '0 minutes')::interval) as duracion_total,
+            ROUND(AVG(EXTRACT(EPOCH FROM (re.fecha_hora_fin - re.fecha_hora_inicio))/60)) as duracion_media,
+            COUNT(DISTINCT re.id_rutina) as rutinas_unicas
+        FROM equipos e
+        JOIN salas s ON e.id_sala = s.id_sala
+        LEFT JOIN ejercicios ej ON ej.id_equipo = e.id_equipo
+        LEFT JOIN rutina_ejercicios rex ON ej.id_ejercicio = rex.id_ejercicio
+        LEFT JOIN registros_entrenamiento re ON rex.id_rutina = re.id_rutina
+        WHERE 1=1
+    """
+
+    params = []
+
+    if nombre_equipo:
+        query += " AND e.nombre_equipo ILIKE %s"
+        params.append(f'%{nombre_equipo}%')
+
+    if marca:
+        query += " AND e.marca = %s"
+        params.append(marca)
+        
+    if modelo:
+        query += " AND e.modelo ILIKE %s"
+        params.append(f'%{modelo}%')
+
+    if sala:
+        query += " AND s.id_sala = %s"
+        params.append(sala)
+        
+    if tipo_ejercicio:
+        query += " AND ej.tipo_ejercicio = %s"
+        params.append(tipo_ejercicio)
+
+    if fecha_inicio_rutina:
+        query += " AND re.fecha_hora_inicio::date >= %s"
+        params.append(fecha_inicio_rutina)
+
+    if fecha_fin_rutina:
+        query += " AND re.fecha_hora_inicio::date <= %s"
+        params.append(fecha_fin_rutina)
+
+    query += """
+        GROUP BY 
+            e.id_equipo,
+            e.nombre_equipo,
+            e.marca,
+            e.modelo,
+            s.nombre_sala
+        ORDER BY usos DESC
+    """
+
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        equipos_uso = dictfetchall(cursor)
+        
+        # Formatear la duración total a minutos
+        for equipo in equipos_uso:
+            if equipo['duracion_total']:
+                # Extraer los minutos totales de la duración
+                with connection.cursor() as cursor_duracion:
+                    cursor_duracion.execute(
+                        "SELECT EXTRACT(EPOCH FROM %s::interval)/60",
+                        [equipo['duracion_total']]
+                    )
+                    minutos_totales = cursor_duracion.fetchone()[0]
+                    equipo['duracion_total'] = round(minutos_totales)
+            else:
+                equipo['duracion_total'] = 0
+
+    return JsonResponse(equipos_uso, safe=False)
+
+
+@require_GET
+def get_uso_equipos_por_sala(request):
+    """Devuelve estadísticas de uso de equipos agrupados por sala"""
+    fecha_inicio = request.GET.get('fechaInicio', '')
+    fecha_fin = request.GET.get('fechaFin', '')
+    
+    query = """
+        SELECT 
+            s.nombre_sala as sala,
+            COUNT(DISTINCT re.id_registro) as usos_totales,
+            ROUND(AVG(EXTRACT(EPOCH FROM (re.fecha_hora_fin - re.fecha_hora_inicio))/60)) as duracion_media
+        FROM salas s
+        JOIN equipos e ON s.id_sala = e.id_sala
+        JOIN ejercicios ej ON e.id_equipo = ej.id_equipo
+        JOIN rutina_ejercicios rex ON ej.id_ejercicio = rex.id_ejercicio
+        JOIN registros_entrenamiento re ON rex.id_rutina = re.id_rutina
+        WHERE re.fecha_hora_fin IS NOT NULL
+    """
+    
+    params = []
+    
+    if fecha_inicio:
+        query += " AND re.fecha_hora_inicio::date >= %s"
+        params.append(fecha_inicio)
+        
+    if fecha_fin:
+        query += " AND re.fecha_hora_inicio::date <= %s"
+        params.append(fecha_fin)
+        
+    query += """
+        GROUP BY s.nombre_sala
+        ORDER BY usos_totales DESC
+    """
+    
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        uso_por_sala = dictfetchall(cursor)
+        
+    return JsonResponse(uso_por_sala, safe=False)
+
+
+@require_GET
+def get_top_equipos_usados(request):
+    """Devuelve los equipos más utilizados"""
+    limite = request.GET.get('limite', '10')
+    
+    query = """
+        SELECT 
+            e.nombre_equipo as nombre,
+            e.marca,
+            s.nombre_sala as sala,
+            COUNT(DISTINCT re.id_registro) as usos_totales
+        FROM equipos e
+        JOIN salas s ON e.id_sala = s.id_sala
+        JOIN ejercicios ej ON e.id_equipo = ej.id_equipo
+        JOIN rutina_ejercicios rex ON ej.id_ejercicio = rex.id_ejercicio
+        JOIN registros_entrenamiento re ON rex.id_rutina = re.id_rutina
+        GROUP BY e.nombre_equipo, e.marca, s.nombre_sala
+        ORDER BY usos_totales DESC
+        LIMIT %s
+    """
+    
+    with connection.cursor() as cursor:
+        cursor.execute(query, [limite])
+        top_equipos = dictfetchall(cursor)
+        
+    return JsonResponse(top_equipos, safe=False)
+
+
+
+
 #############
 # Reporte 5 #
 #############
