@@ -371,6 +371,388 @@ def get_progreso_mediciones(request):
 
 
 
+#############
+# Reporte 3 #
+#############
+
+@require_GET
+def get_rutinas(request):
+    """Devuelve todas las rutinas disponibles"""
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT r.id_rutina as id, r.nombre_rutina as nombre, r.nivel_dificultad, 
+                   r.duracion_estimada_min as duracion_minutos, 
+                   e.nombre || ' ' || e.apellido as entrenador
+            FROM rutinas r
+            JOIN entrenadores e ON r.id_entrenador_creador = e.id_entrenador
+            ORDER BY r.nombre_rutina
+        """)
+        rutinas = dictfetchall(cursor)
+
+    return JsonResponse(rutinas, safe=False)
+
+@require_GET
+def get_registros_rutinas(request):
+    """Devuelve los registros de entrenamiento con rutinas y calorías quemadas"""
+    id_rutina = request.GET.get('rutina', '')
+    nivel_dificultad = request.GET.get('nivel', '')
+    nombre_socio = request.GET.get('socio', '')
+    fecha_inicio = request.GET.get('fecha_inicio', '')
+    fecha_fin = request.GET.get('fecha_fin', '')
+    
+    query = """
+        SELECT 
+            re.id_registro,
+            s.nombre || ' ' || s.apellido as socio,
+            r.nombre_rutina as rutina,
+            r.nivel_dificultad as nivel,
+            re.fecha_hora_inicio::date as fecha,
+            EXTRACT(EPOCH FROM (re.fecha_hora_fin - re.fecha_hora_inicio))/60 as duracion_real_minutos,
+            re.calorias_quemadas,
+            EXTRACT(WEEK FROM re.fecha_hora_inicio) as semana,
+            EXTRACT(MONTH FROM re.fecha_hora_inicio) as mes,
+            EXTRACT(YEAR FROM re.fecha_hora_inicio) as año
+        FROM registros_entrenamiento re
+        JOIN socios s ON re.id_socio = s.id_socio
+        JOIN rutinas r ON re.id_rutina = r.id_rutina
+        WHERE 1=1
+        AND s.activo = true
+    """
+    
+    params = []
+    
+    if id_rutina:
+        query += " AND r.id_rutina = %s"
+        params.append(id_rutina)
+    
+    if nivel_dificultad:
+        query += " AND r.nivel_dificultad = %s"
+        params.append(nivel_dificultad)
+    
+    if nombre_socio:
+        query += " AND (LOWER(s.nombre) LIKE %s OR LOWER(s.apellido) LIKE %s)"
+        search_term = f"%{nombre_socio.lower()}%"
+        params.append(search_term)
+        params.append(search_term)
+    
+    if fecha_inicio:
+        query += " AND re.fecha_hora_inicio::date >= %s"
+        params.append(fecha_inicio)
+    
+    if fecha_fin:
+        query += " AND re.fecha_hora_inicio::date <= %s"
+        params.append(fecha_fin)
+    
+    query += " ORDER BY re.fecha_hora_inicio DESC"
+    
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        registros = dictfetchall(cursor)
+    
+    return JsonResponse(registros, safe=False)
+
+@require_GET
+def get_calorias_por_rutina(request):
+    """Devuelve el promedio de calorías quemadas por rutina"""
+    id_rutina = request.GET.get('rutina', '')
+    nivel_dificultad = request.GET.get('nivel', '')
+    nombre_socio = request.GET.get('socio', '')
+    fecha_inicio = request.GET.get('fecha_inicio', '')
+    fecha_fin = request.GET.get('fecha_fin', '')
+    
+    query = """
+        SELECT 
+            r.nombre_rutina as rutina,
+            ROUND(AVG(re.calorias_quemadas)) as promedio_calorias
+        FROM registros_entrenamiento re
+        JOIN socios s ON re.id_socio = s.id_socio
+        JOIN rutinas r ON re.id_rutina = r.id_rutina
+        WHERE 1=1
+        AND s.activo = true
+    """
+    
+    params = []
+    
+    if id_rutina:
+        query += " AND r.id_rutina = %s"
+        params.append(id_rutina)
+    
+    if nivel_dificultad:
+        query += " AND r.nivel_dificultad = %s"
+        params.append(nivel_dificultad)
+    
+    if nombre_socio:
+        query += " AND (LOWER(s.nombre) LIKE %s OR LOWER(s.apellido) LIKE %s)"
+        search_term = f"%{nombre_socio.lower()}%"
+        params.append(search_term)
+        params.append(search_term)
+    
+    if fecha_inicio:
+        query += " AND re.fecha_hora_inicio::date >= %s"
+        params.append(fecha_inicio)
+    
+    if fecha_fin:
+        query += " AND re.fecha_hora_inicio::date <= %s"
+        params.append(fecha_fin)
+    
+    query += " GROUP BY r.nombre_rutina ORDER BY promedio_calorias DESC"
+    
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        promedios = dictfetchall(cursor)
+    
+    return JsonResponse(promedios, safe=False)
+
+@require_GET
+def get_tendencia_calorias_semanal(request):
+    """Devuelve la tendencia de calorías quemadas semana a semana"""
+    id_rutina = request.GET.get('rutina', '')
+    nivel_dificultad = request.GET.get('nivel', '')
+    nombre_socio = request.GET.get('socio', '')
+    fecha_inicio = request.GET.get('fecha_inicio', '')
+    fecha_fin = request.GET.get('fecha_fin', '')
+    
+    query = """
+        SELECT 
+            EXTRACT(YEAR FROM re.fecha_hora_inicio) || '-W' || LPAD(EXTRACT(WEEK FROM re.fecha_hora_inicio)::text, 2, '0') as semana,
+            ROUND(AVG(re.calorias_quemadas)) as promedio_calorias,
+            MIN(re.fecha_hora_inicio) as fecha_semana
+        FROM registros_entrenamiento re
+        JOIN socios s ON re.id_socio = s.id_socio
+        JOIN rutinas r ON re.id_rutina = r.id_rutina
+        WHERE 1=1
+        AND s.activo = true
+    """
+    
+    params = []
+    
+    if id_rutina:
+        query += " AND r.id_rutina = %s"
+        params.append(id_rutina)
+    
+    if nivel_dificultad:
+        query += " AND r.nivel_dificultad = %s"
+        params.append(nivel_dificultad)
+    
+    if nombre_socio:
+        query += " AND (LOWER(s.nombre) LIKE %s OR LOWER(s.apellido) LIKE %s)"
+        search_term = f"%{nombre_socio.lower()}%"
+        params.append(search_term)
+        params.append(search_term)
+    
+    if fecha_inicio:
+        query += " AND re.fecha_hora_inicio::date >= %s"
+        params.append(fecha_inicio)
+    
+    if fecha_fin:
+        query += " AND re.fecha_hora_inicio::date <= %s"
+        params.append(fecha_fin)
+    
+    query += " GROUP BY semana ORDER BY MIN(re.fecha_hora_inicio)"
+    
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        tendencia = dictfetchall(cursor)
+    
+    return JsonResponse(tendencia, safe=False)
+
+
+
+
+
+#############
+# Reporte 4 #
+#############
+
+@require_GET
+def get_equipos_disponibles(request):
+    """Devuelve todos los equipos disponibles"""
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT id_equipo as id, nombre_equipo as nombre, marca, modelo
+            FROM equipos
+            ORDER BY nombre_equipo
+        """)
+        equipos = dictfetchall(cursor)
+
+    return JsonResponse(equipos, safe=False)
+
+
+@require_GET
+def get_marcas_equipos(request):
+    """Devuelve todas las marcas de equipos disponibles"""
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT DISTINCT marca 
+            FROM equipos
+            ORDER BY marca
+        """)
+        marcas = [row[0] for row in cursor.fetchall()]
+
+    return JsonResponse(marcas, safe=False)
+
+
+@require_GET
+def get_uso_equipos(request):
+    """Devuelve los datos de uso de equipos con filtros opcionales"""
+    nombre_equipo = request.GET.get('nombreEquipo', '')
+    marca = request.GET.get('marca', '')
+    modelo = request.GET.get('modelo', '')
+    sala = request.GET.get('sala', '')
+    fecha_inicio_rutina = request.GET.get('fechaInicioRutina', '')
+    fecha_fin_rutina = request.GET.get('fechaFinRutina', '')
+    tipo_ejercicio = request.GET.get('tipoEjercicio', '')
+
+    query = """
+        SELECT 
+            e.id_equipo,
+            e.nombre_equipo as nombre,
+            e.marca,
+            e.modelo,
+            s.nombre_sala as sala,
+            COUNT(DISTINCT re.id_registro) as usos,
+            SUM(COALESCE(re.fecha_hora_fin - re.fecha_hora_inicio, '0 minutes')::interval) as duracion_total,
+            ROUND(AVG(EXTRACT(EPOCH FROM (re.fecha_hora_fin - re.fecha_hora_inicio))/60)) as duracion_media,
+            COUNT(DISTINCT re.id_rutina) as rutinas_unicas
+        FROM equipos e
+        JOIN salas s ON e.id_sala = s.id_sala
+        LEFT JOIN ejercicios ej ON ej.id_equipo = e.id_equipo
+        LEFT JOIN rutina_ejercicios rex ON ej.id_ejercicio = rex.id_ejercicio
+        LEFT JOIN registros_entrenamiento re ON rex.id_rutina = re.id_rutina
+        WHERE 1=1
+    """
+
+    params = []
+
+    if nombre_equipo:
+        query += " AND e.nombre_equipo ILIKE %s"
+        params.append(f'%{nombre_equipo}%')
+
+    if marca:
+        query += " AND e.marca = %s"
+        params.append(marca)
+        
+    if modelo:
+        query += " AND e.modelo ILIKE %s"
+        params.append(f'%{modelo}%')
+
+    if sala:
+        query += " AND s.id_sala = %s"
+        params.append(sala)
+        
+    if tipo_ejercicio:
+        query += " AND ej.tipo_ejercicio = %s"
+        params.append(tipo_ejercicio)
+
+    if fecha_inicio_rutina:
+        query += " AND re.fecha_hora_inicio::date >= %s"
+        params.append(fecha_inicio_rutina)
+
+    if fecha_fin_rutina:
+        query += " AND re.fecha_hora_inicio::date <= %s"
+        params.append(fecha_fin_rutina)
+
+    query += """
+        GROUP BY 
+            e.id_equipo,
+            e.nombre_equipo,
+            e.marca,
+            e.modelo,
+            s.nombre_sala
+        ORDER BY usos DESC
+    """
+
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        equipos_uso = dictfetchall(cursor)
+        
+        # Formatear la duración total a minutos
+        for equipo in equipos_uso:
+            if equipo['duracion_total']:
+                # Extraer los minutos totales de la duración
+                with connection.cursor() as cursor_duracion:
+                    cursor_duracion.execute(
+                        "SELECT EXTRACT(EPOCH FROM %s::interval)/60",
+                        [equipo['duracion_total']]
+                    )
+                    minutos_totales = cursor_duracion.fetchone()[0]
+                    equipo['duracion_total'] = round(minutos_totales)
+            else:
+                equipo['duracion_total'] = 0
+
+    return JsonResponse(equipos_uso, safe=False)
+
+
+@require_GET
+def get_uso_equipos_por_sala(request):
+    """Devuelve estadísticas de uso de equipos agrupados por sala"""
+    fecha_inicio = request.GET.get('fechaInicio', '')
+    fecha_fin = request.GET.get('fechaFin', '')
+    
+    query = """
+        SELECT 
+            s.nombre_sala as sala,
+            COUNT(DISTINCT re.id_registro) as usos_totales,
+            ROUND(AVG(EXTRACT(EPOCH FROM (re.fecha_hora_fin - re.fecha_hora_inicio))/60)) as duracion_media
+        FROM salas s
+        JOIN equipos e ON s.id_sala = e.id_sala
+        JOIN ejercicios ej ON e.id_equipo = ej.id_equipo
+        JOIN rutina_ejercicios rex ON ej.id_ejercicio = rex.id_ejercicio
+        JOIN registros_entrenamiento re ON rex.id_rutina = re.id_rutina
+        WHERE re.fecha_hora_fin IS NOT NULL
+    """
+    
+    params = []
+    
+    if fecha_inicio:
+        query += " AND re.fecha_hora_inicio::date >= %s"
+        params.append(fecha_inicio)
+        
+    if fecha_fin:
+        query += " AND re.fecha_hora_inicio::date <= %s"
+        params.append(fecha_fin)
+        
+    query += """
+        GROUP BY s.nombre_sala
+        ORDER BY usos_totales DESC
+    """
+    
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        uso_por_sala = dictfetchall(cursor)
+        
+    return JsonResponse(uso_por_sala, safe=False)
+
+
+@require_GET
+def get_top_equipos_usados(request):
+    """Devuelve los equipos más utilizados"""
+    limite = request.GET.get('limite', '10')
+    
+    query = """
+        SELECT 
+            e.nombre_equipo as nombre,
+            e.marca,
+            s.nombre_sala as sala,
+            COUNT(DISTINCT re.id_registro) as usos_totales
+        FROM equipos e
+        JOIN salas s ON e.id_sala = s.id_sala
+        JOIN ejercicios ej ON e.id_equipo = ej.id_equipo
+        JOIN rutina_ejercicios rex ON ej.id_ejercicio = rex.id_ejercicio
+        JOIN registros_entrenamiento re ON rex.id_rutina = re.id_rutina
+        GROUP BY e.nombre_equipo, e.marca, s.nombre_sala
+        ORDER BY usos_totales DESC
+        LIMIT %s
+    """
+    
+    with connection.cursor() as cursor:
+        cursor.execute(query, [limite])
+        top_equipos = dictfetchall(cursor)
+        
+    return JsonResponse(top_equipos, safe=False)
+
+
+
 
 #############
 # Reporte 5 #
