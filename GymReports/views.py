@@ -367,3 +367,201 @@ def get_progreso_mediciones(request):
         })
 
     return JsonResponse(list(socios.values()), safe=False)
+
+
+
+
+
+#############
+# Reporte 5 #
+#############
+
+@require_GET
+def get_frecuencia_visitas(request):
+    """Devuelve la frecuencia de visitas de socios con filtros opcionales"""
+    nombre_socio = request.GET.get('nombreSocio', '')
+    fecha_inicio = request.GET.get('fechaInicio', '')
+    fecha_fin = request.GET.get('fechaFin', '')
+    tipo_actividad = request.GET.get('tipoActividad', '')
+    plan_membresia = request.GET.get('planMembresia', '')
+
+    # Base query para socios
+    query = """
+        SELECT 
+            s.id_socio,
+            s.nombre,
+            s.apellido,
+            s.email,
+            pm.nombre_plan as plan,
+            
+            -- Conteo de rutinas
+            COALESCE(
+                (SELECT COUNT(*) 
+                FROM registros_entrenamiento re 
+                WHERE re.id_socio = s.id_socio
+    """
+
+    # Filtro por fecha para rutinas
+    if fecha_inicio:
+        query += " AND re.fecha_hora_inicio >= %s"
+
+    if fecha_fin:
+        query += " AND re.fecha_hora_inicio <= %s"
+
+    query += """
+                ), 0) as entrenamientos_count,
+                
+            -- Conteo de clases
+            COALESCE(
+                (SELECT COUNT(*) 
+                FROM socios_clases sc
+                JOIN clases_grupales cg ON sc.id_clase = cg.id_clase
+                WHERE sc.id_socio = s.id_socio
+                AND sc.asistio = true
+    """
+
+    # Filtro por fecha para clases
+    if fecha_inicio:
+        query += " AND cg.fecha_hora_inicio >= %s"
+
+    if fecha_fin:
+        query += " AND cg.fecha_hora_inicio <= %s"
+
+    query += """
+                ), 0) as clases_count,
+                
+            -- Última fecha de visita (el mayor entre la última rutina y la última clase)
+            GREATEST(
+                COALESCE(
+                    (SELECT MAX(re.fecha_hora_inicio) 
+                    FROM registros_entrenamiento re 
+                    WHERE re.id_socio = s.id_socio),
+                    '1900-01-01'::timestamp
+                ),
+                COALESCE(
+                    (SELECT MAX(cg.fecha_hora_inicio) 
+                    FROM socios_clases sc
+                    JOIN clases_grupales cg ON sc.id_clase = cg.id_clase
+                    WHERE sc.id_socio = s.id_socio
+                    AND sc.asistio = true),
+                    '1900-01-01'::timestamp
+                )
+            ) as ultima_visita
+            
+        FROM socios s
+        JOIN planes_membresia pm ON s.id_plan = pm.id_plan
+        WHERE s.activo = true
+    """
+
+    params = []
+
+    # Filtro por nombre, apellido o email
+    if nombre_socio:
+        query += """ 
+            AND (
+                s.nombre ILIKE %s 
+                OR s.apellido ILIKE %s 
+                OR s.email ILIKE %s
+            )
+        """
+        search_term = f'%{nombre_socio}%'
+        params.extend([search_term, search_term, search_term])
+
+    # Filtro por plan de membresía
+    if plan_membresia:
+        query += " AND s.id_plan = %s"
+        params.append(plan_membresia)
+
+    # Agregar GROUP BY con todas las columnas no agregadas
+    query += """
+        GROUP BY s.id_socio, s.nombre, s.apellido, s.email, pm.nombre_plan
+    """
+
+    # Agregar parámetros de fecha para las subconsultas de rutinas y clases
+    if fecha_inicio:
+        params.append(fecha_inicio)
+    if fecha_fin:
+        params.append(fecha_fin)
+    if fecha_inicio:
+        params.append(fecha_inicio)
+    if fecha_fin:
+        params.append(fecha_fin)
+
+    # Cláusula HAVING para filtrar por tipo de actividad si es necesario
+    if tipo_actividad:
+        if tipo_actividad == 'rutina':
+            query += " HAVING COALESCE((SELECT COUNT(*) FROM registros_entrenamiento re WHERE re.id_socio = s.id_socio"
+            if fecha_inicio:
+                query += " AND re.fecha_hora_inicio >= %s"
+                params.append(fecha_inicio)
+            if fecha_fin:
+                query += " AND re.fecha_hora_inicio <= %s"
+                params.append(fecha_fin)
+            query += "), 0) > 0"
+        elif tipo_actividad == 'clase':
+            query += " HAVING COALESCE((SELECT COUNT(*) FROM socios_clases sc JOIN clases_grupales cg ON sc.id_clase = cg.id_clase WHERE sc.id_socio = s.id_socio AND sc.asistio = true"
+            if fecha_inicio:
+                query += " AND cg.fecha_hora_inicio >= %s"
+                params.append(fecha_inicio)
+            if fecha_fin:
+                query += " AND cg.fecha_hora_inicio <= %s"
+                params.append(fecha_fin)
+            query += "), 0) > 0"
+    else:
+        # Si no hay filtro por tipo de actividad, asegurarse de que haya al menos una visita
+        query += " HAVING (COALESCE((SELECT COUNT(*) FROM registros_entrenamiento re WHERE re.id_socio = s.id_socio"
+        if fecha_inicio:
+            query += " AND re.fecha_hora_inicio >= %s"
+            params.append(fecha_inicio)
+        if fecha_fin:
+            query += " AND re.fecha_hora_inicio <= %s"
+            params.append(fecha_fin)
+        query += "), 0) + COALESCE((SELECT COUNT(*) FROM socios_clases sc JOIN clases_grupales cg ON sc.id_clase = cg.id_clase WHERE sc.id_socio = s.id_socio AND sc.asistio = true"
+        if fecha_inicio:
+            query += " AND cg.fecha_hora_inicio >= %s"
+            params.append(fecha_inicio)
+        if fecha_fin:
+            query += " AND cg.fecha_hora_inicio <= %s"
+            params.append(fecha_fin)
+        query += "), 0)) > 0"
+
+    # Ordenar por total de visitas (descendente)
+    query += """
+        ORDER BY (
+            COALESCE((SELECT COUNT(*) FROM registros_entrenamiento re WHERE re.id_socio = s.id_socio), 0) + 
+            COALESCE((SELECT COUNT(*) FROM socios_clases sc WHERE sc.id_socio = s.id_socio AND sc.asistio = true), 0)
+        ) DESC
+    """
+
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        socios = dictfetchall(cursor)
+
+    # Calcular el total de visitas para cada socio
+    for socio in socios:
+        socio['totalVisitas'] = socio['entrenamientos_count'] + \
+            socio['clases_count']
+        # Formatear la fecha de última visita para visualización
+        if socio['ultima_visita'] and socio['ultima_visita'] != '1900-01-01 00:00:00':
+            socio['fechaUltimaVisita'] = socio['ultima_visita'].strftime(
+                '%Y-%m-%d')
+        else:
+            socio['fechaUltimaVisita'] = 'N/A'
+        # Eliminar el campo de fecha completa
+        del socio['ultima_visita']
+
+    return JsonResponse(socios, safe=False)
+
+
+@require_GET
+def get_planes_membresia(request):
+    """Devuelve todos los planes de membresía disponibles"""
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT id_plan as id, nombre_plan as nombre, precio_mensual
+            FROM planes_membresia
+            ORDER BY precio_mensual
+        """)
+        planes = dictfetchall(cursor)
+
+    return JsonResponse(planes, safe=False)

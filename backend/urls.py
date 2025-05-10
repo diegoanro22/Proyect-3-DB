@@ -33,4 +33,8 @@ urlpatterns = [
     path('api/socios/', reportes_views.get_socios, name='api_socios'),
     path('api/mediciones-corporales/', reportes_views.get_mediciones_corporales, name='api_mediciones_corporales'),
     path('api/progreso-mediciones/', reportes_views.get_progreso_mediciones, name='api_progreso_mediciones'),
+    
+    # APIs para Reporte 5: 
+    path('api/frecuencia-visitas/', reportes_views.get_frecuencia_visitas, name='api_frecuencia_visitas'),
+    path('api/planes-membresia/', reportes_views.get_planes_membresia, name='api_planes_membresia'),
 ]
