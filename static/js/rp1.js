@@ -112,34 +112,7 @@ async function loadTableDataReporte1() {
         const fechaAdquisicionDesde = fechaAdquisicionDesdeEl ? fechaAdquisicionDesdeEl.value : '';
         const fechaAdquisicionHasta = fechaAdquisicionHastaEl ? fechaAdquisicionHastaEl.value : '';
 
-        // Filtrar equipos
-        const equiposFiltrados = equiposData.filter(equipo => {
-            // Filtrar por estado
-            if (estadoEquipo && equipo.estado !== estadoEquipo) {
-                return false;
-            }
-
-            // Filtrar por sala
-            if (sala && equipo.id_sala !== parseInt(sala)) {
-                return false;
-            }
-
-            // Filtrar por tipo de ejercicio
-            if (tipoEjercicio && equipo.tipo_ejercicio !== tipoEjercicio) {
-                return false;
-            }
-
-            // Filtrar por fecha de adquisición
-            if (fechaAdquisicionDesde && equipo.fecha_adquisicion < fechaAdquisicionDesde) {
-                return false;
-            }
-
-            if (fechaAdquisicionHasta && equipo.fecha_adquisicion > fechaAdquisicionHasta) {
-                return false;
-            }
-
-            return true;
-        });
+        
 
         // Construir URL con parametros para la API
         let url = new URL('/api/equipos/', window.location.origin);
@@ -162,10 +135,14 @@ async function loadTableDataReporte1() {
         // Actualizar tabla
         updateTableWithDataReporte1(datosCompletos);
 
-        // Mostrar gráfico de pastel cuando la vista de gráfico está activa
+        // Mostrar gráfico según tipo seleccionado
         const chartView = document.getElementById('chartView');
         if (chartView && chartView.classList.contains('active')) {
-            renderPieChartReporte1(datosCompletos);
+            if (tipoVisualizacion === 'pastel') {
+                await renderPieChartReporte1(datosCompletos);
+            } else {
+                await renderBarChartReporte1(datosCompletos);
+            }
         }
     } catch (error) {
         console.error('Error en loadTableDataReporte1:', error);
