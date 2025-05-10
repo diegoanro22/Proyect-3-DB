@@ -32,8 +32,11 @@ async function configureFiltersForReporte2() {
             <label for="plan">Plan:</label>
             <select id="plan" name="plan">
                 <option value="">Todos</option>
-                <option value="M">Masculino</option>
-                <option value="F">Femenino</option>
+                <option value="M">Básico</option>
+                <option value="F">Estándar</option>
+                <option value="M">Premium</option>
+                <option value="F">Nocturno</option>
+                <option value="M">Fines de Semana</option>
             </select>
         </div>
         <div class="filter-group">
@@ -222,6 +225,7 @@ function updateTableWithDataReporte2(data, tipoMedicion) {
 
         return {
             socio: `${medicion.nombre} ${medicion.apellido}`,
+            plan: medicion.plan_membresia, 
             edad: medicion.edad,
             fecha: medicion.fecha_medicion,
             medicion: valorMedicion,

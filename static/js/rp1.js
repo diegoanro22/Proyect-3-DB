@@ -73,13 +73,6 @@ async function configureFiltersForReporte1() {
             <input type="date" id="fechaAdquisicionHasta" name="fechaAdquisicionHasta">
         </div>
         <div class="filter-group">
-            <label for="tipoVisualizacion">Gráfica:</label>
-            <select id="tipoVisualizacion" name="tipoVisualizacion">
-                <option value="pastel">Porcentaje de equipos por estado</option>
-                <option value="barras">Número de equipos activos por sala</option>
-            </select>
-        </div>
-        <div class="filter-group">
             <button type="button" id="btnFiltrar">Aplicar Filtros</button>
             <button type="button" id="btnLimpiar">Limpiar Filtros</button>
         </div>
@@ -112,14 +105,12 @@ async function loadTableDataReporte1() {
         const tipoEjercicioEl = document.getElementById('tipoEjercicio');
         const fechaAdquisicionDesdeEl = document.getElementById('fechaAdquisicionDesde');
         const fechaAdquisicionHastaEl = document.getElementById('fechaAdquisicionHasta');
-        const tipoVisualizacionEl = document.getElementById('tipoVisualizacion');
 
         const estadoEquipo = estadoEquipoEl ? estadoEquipoEl.value : '';
         const sala = salaEl ? salaEl.value : '';
         const tipoEjercicio = tipoEjercicioEl ? tipoEjercicioEl.value : '';
         const fechaAdquisicionDesde = fechaAdquisicionDesdeEl ? fechaAdquisicionDesdeEl.value : '';
         const fechaAdquisicionHasta = fechaAdquisicionHastaEl ? fechaAdquisicionHastaEl.value : '';
-        const tipoVisualizacion = tipoVisualizacionEl ? tipoVisualizacionEl.value : 'pastel';
 
         // Filtrar equipos
         const equiposFiltrados = equiposData.filter(equipo => {
@@ -171,17 +162,13 @@ async function loadTableDataReporte1() {
         // Actualizar tabla
         updateTableWithDataReporte1(datosCompletos);
 
-        // Mostrar gráfico según tipo seleccionado
+        // Mostrar gráfico de pastel cuando la vista de gráfico está activa
         const chartView = document.getElementById('chartView');
         if (chartView && chartView.classList.contains('active')) {
-            if (tipoVisualizacion === 'pastel') {
-                renderPieChartReporte1(datosCompletos);
-            } else {
-                renderBarChartReporte1(datosCompletos);
-            }
+            renderPieChartReporte1(datosCompletos);
         }
     } catch (error) {
-        console.error('Error en loadTableDataReporte4:', error);
+        console.error('Error en loadTableDataReporte1:', error);
     }
 }
 
@@ -340,81 +327,6 @@ async function renderPieChartReporte1(data) {
                                 const percentage = ((value / total) * 100).toFixed(1);
                                 return `${context.dataset.label}: ${value} (${percentage}%)`;
                             }
-                        }
-                    }
-                }
-            }
-        });
-    } catch (error) {
-        console.error('Error al obtener datos para el gráfico:', error);
-    }
-}
-
-async function renderBarChartReporte1() {
-    const reportChartEl = document.getElementById('reportChart');
-    if (!reportChartEl) {
-        console.error('Elemento reportChart no encontrado');
-        return;
-    }
-    const ctx = reportChartEl.getContext('2d');
-    
-    // Destruir gráfico existente si hay uno
-    if (window.reportChart && typeof window.reportChart.destroy === 'function') {
-        window.reportChart.destroy();
-    }
-    
-    try {
-        const response = await fetch('/api/equipos-por-sala/');
-        if (!response.ok) {
-            throw new Error('Error en la petición a la API de equipos por sala');
-        }
-        
-        const dataPorSala = await response.json();
-        
-        // Preparar datos para el gráfico
-        const salas = dataPorSala.map(item => item.sala);
-        const cantidades = dataPorSala.map(item => item.cantidad);
-        
-        // Crear gráfico de barras
-        window.reportChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: salas,
-                datasets: [{
-                    label: 'Equipos activos',
-                    data: cantidades,
-                    backgroundColor: 'rgba(54, 162, 235, 0.7)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Cantidad de equipos'
-                        },
-                        ticks: {
-                            precision: 0
-                        }
-                    },
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Sala'
-                        }
-                    }
-                },
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'Número de equipos activos por sala',
-                        font: {
-                            size: 16
                         }
                     }
                 }

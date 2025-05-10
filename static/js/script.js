@@ -116,11 +116,6 @@ function initApp() {
                                     <!-- Aquí insertaremos datos -->
                                 </tbody>
                             </table>
-                            <div class="pagination">
-                                <button id="prevPage"><i class="fas fa-chevron-left"></i></button>
-                                <span id="pageInfo">Página 1</span>
-                                <button id="nextPage"><i class="fas fa-chevron-right"></i></button>
-                            </div>
                         </div>
                         <div id="chartView" class="view">
                             <div class="chart-container">
@@ -142,13 +137,11 @@ function initApp() {
 }
 
 let currentPage = 1;
-const rowsPerPage = 10;
-let totalPages = 1;
+const rowsPerPage = 100; // Cambiado de 10 a 100
 
 function loadTableData() {
     const tableBody = document.getElementById('tableBody');
     tableBody.innerHTML = '<tr><td colspan="5">Seleccione un reporte</td></tr>';
-    document.getElementById('pageInfo').textContent = 'Página 1 de 1';
 }
 
 function setupEventListeners() {
@@ -249,7 +242,6 @@ function setupEventListeners() {
     });
 
     // Conectar los botones de exportación a las funciones en exportaciones.js
-    // Ya no usamos alerts, sino las funciones reales de exportación
     document.getElementById('btnExportPDF').addEventListener('click', function() {
         // Llamar a la función exportarAPDF de exportaciones.js
         if (typeof window.exportarAPDF === 'function') {
@@ -267,36 +259,6 @@ function setupEventListeners() {
             console.error('La función exportarAExcel no está disponible');
         }
     });
-
-    // Paginación
-    document.getElementById('prevPage').addEventListener('click', function() {
-        if (currentPage > 1) {
-            currentPage--;
-            handlePagination();
-        }
-    });
-
-    document.getElementById('nextPage').addEventListener('click', function() {
-        if (currentPage < totalPages) {
-            currentPage++;
-            handlePagination();
-        }
-    });
-}
-
-function handlePagination() {
-    const activeReport = document.querySelector('nav a.active').getAttribute('data-report');
-    if (activeReport === 'reporte1') {
-        loadTableDataReporte1();
-    } else if (activeReport === 'reporte2') {
-        loadTableDataReporte2();
-    } else if (activeReport === 'reporte3') {
-        loadTableDataReporte3();
-    } else if (activeReport === 'reporte4') {
-        loadTableDataReporte4();
-    } else if (activeReport === 'reporte5') {
-        loadTableDataReporte5();
-    }
 }
 
 // Funciones globales para llamadas desde los reportes
