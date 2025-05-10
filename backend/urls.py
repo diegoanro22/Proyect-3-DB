@@ -28,4 +28,9 @@ urlpatterns = [
     path('api/equipos/', reportes_views.get_equipos_data, name='api_equipos'),
     path('api/estados-equipos/', reportes_views.get_resumen_estados_equipos, name='api_estados_equipos'),
     path('api/equipos-por-sala/', reportes_views.get_equipos_por_sala, name='api_equipos_por_sala'),
+    
+    # APIs para Reporte 2: Progreso Físico (Mediciones Corporales)
+    path('api/socios/', reportes_views.get_socios, name='api_socios'),
+    path('api/mediciones-corporales/', reportes_views.get_mediciones_corporales, name='api_mediciones_corporales'),
+    path('api/progreso-mediciones/', reportes_views.get_progreso_mediciones, name='api_progreso_mediciones'),
 ]
