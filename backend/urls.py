@@ -28,4 +28,7 @@ urlpatterns = [
     path('api/equipos/', reportes_views.get_equipos_data, name='api_equipos'),
     path('api/estados-equipos/', reportes_views.get_resumen_estados_equipos, name='api_estados_equipos'),
     path('api/equipos-por-sala/', reportes_views.get_equipos_por_sala, name='api_equipos_por_sala'),
+    # Agregar estas rutas en urlpatterns
+    path('api/frecuencia-visitas/', reportes_views.get_frecuencia_visitas, name='api_frecuencia_visitas'),
+    path('api/planes-membresia/', reportes_views.get_planes_membresia, name='api_planes_membresia'),
 ]
