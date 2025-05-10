@@ -34,6 +34,20 @@
       <pre><code>docker-compose up --build</code></pre>
     </li>
   </ol>
+
+  <h3>Atención</h3>
+  <p>
+    Si al levantar los contenedores de Docker ocurre un error relacionado con <code>wait-for-db.sh</code>, es posible que se deba al formato de fin de línea (CRLF). 
+    Para solucionarlo:
+  </p>
+  <ul>
+    <li>Abre el archivo <code>wait-for-db.sh</code> en Visual Studio Code</li>
+    <li>Cambia el formato de fin de línea de <strong>CRLF</strong> a <strong>LF</strong> (en la esquina inferior derecha)</li>
+    <li>Guarda el archivo</li>
+    <li>Vuelve a levantar los contenedores con:
+      <pre><code>docker-compose up --build</code></pre>
+    </li>
+  </ul>
   
   <h2>Uso</h2>
   <p>Una vez que los contenedores estén en ejecución:</p>
